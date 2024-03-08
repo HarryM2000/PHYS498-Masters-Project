@@ -29,15 +29,16 @@ time_d = data['DeltaT'].values
 time_err = data['Time Error'].values
 time_e = data['ExpTime'].values
 data_filter = data['Filter'].values
-AB_0 = data['AB(0)'].values
-flux = data['Flux'].values
-flux_density = data['Flux Density'].values
+AB_0 = data['magnitude'].values
+flux = data['flux'].values
+flux_density = data['flux_density'].values
 flux_err = data['Flux Error'].values
 flux_density_err = data["Flux Density Error"].values
 frequency = data['Frequency'].values
 bands = data['Filter'].values
 data_mode = 'flux_density'
 name = '160821B'
+sigma = 1.35e-29
 redshift = 0.162
 av = 0.118
 thv = 0.0
@@ -71,9 +72,6 @@ print('time:', time_arr_four)
 afterglow = redback.transient.Afterglow(
     name=name, data_mode=data_mode, time=logtime,
     flux_density = flux_density, flux_density_err=flux_density_err, frequency=frequency)
-
-sampler = 'nessai'
-model = 'two_component_kilonova_model'
 
 g_band_data = data[data["Filter"] == 'g']
 print("g-band:", g_band_data)
@@ -110,7 +108,7 @@ freq_arr_2 = np.ones(len(time_arr_two))*1e14
 kwargs = dict(frequency=freq_arr_2, output_format = 'flux_density')
 frequency = kwargs['frequency']
 two_component_model = redback.transient_models.kilonova_models.two_component_kilonova_model(time_arr_four, redshift, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs)
-kwargs = dict(frequency=freq_arr_g, output_format = 'flux_density')
+kwargs = dict(frequency=freq_arr_g, output_format = 'flux_density', data_mode = 'flux_density')
 frequency = freq_arr_g
 two_component_g = redback.transient_models.kilonova_models.two_component_kilonova_model(time_arr_g, redshift, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs)
 kwargs = dict(frequency=freq_arr_i, output_format = 'flux_density')
@@ -147,7 +145,7 @@ plt.show()
 kwargs = dict(frequency=freq_arr, output_format = 'flux_density')
 frequency = kwargs['frequency']
 afterglow_tophat_model = redback.transient_models.afterglow_models.tophat_redback_refreshed(time_arr_four, redshift, thv, loge0, thc, g1, et, s1, logn0, p, logepse, logepsb, g0, xiN, **kwargs)
-kwargs = dict(frequency=freq_arr_g, output_format = 'flux_density')
+kwargs = dict(frequency=freq_arr_g, output_format = 'flux_density', data_mode = 'flux_density')
 frequency = freq_arr_g
 afterglow_tophat_g = redback.transient_models.afterglow_models.tophat_redback_refreshed(time_arr_g, redshift, thv, loge0, thc, g1, et, s1, logn0, p, logepse, logepsb, g0, xiN, **kwargs)
 kwargs = dict(frequency=freq_arr_i, output_format = 'flux_density')
@@ -198,17 +196,30 @@ logtime = np.log10(time_arr)
 plt.loglog(time_arr_four, two_component_model, label = 'Two Component', color = 'black')
 plt.loglog(time_arr_four, afterglow_tophat_model, label = 'Tophat', color = 'grey')
 plt.loglog(time_arr_four, combine_model, linestyle = ':', label = 'Combined', color = 'black')
-plt.loglog(time_arr_g, combine_g, linestyle = '--', label = 'g', color = 'purple')
-plt.loglog(time_arr_i, combine_i, linestyle = '--', label = 'i', color = 'green')
-plt.loglog(time_arr_r, combine_r, linestyle = '--', label = 'r', color = 'cyan')
-plt.loglog(time_arr_z, combine_z, linestyle = '--', label = 'z', color = 'yellow')
-plt.loglog(time_arr_H, combine_H, linestyle = '--', label = 'H', color = 'red')
-plt.loglog(time_arr_K, combine_K, linestyle = '--', label = 'K', color = 'magenta')
-plt.loglog(time_arr_F606W, combine_F606W, linestyle = '--', label = 'F606W', color = 'orange')
-plt.loglog(time_arr_F110W, combine_F110W, linestyle = '--', label = 'F110W', color = 'blue')
-plt.loglog(time_arr_F160W, combine_F160W, linestyle = '--', label = 'F160W', color = 'violet')
+plt.loglog(time_arr_g, combine_g, linestyle = '--', label = 'g', color = 'purple', marker = 'o')
+plt.loglog(time_arr_i, combine_i, linestyle = '--', label = 'i', color = 'green', marker = 'o')
+plt.loglog(time_arr_r, combine_r, linestyle = '--', label = 'r', color = 'cyan', marker = 'o')
+plt.loglog(time_arr_z, combine_z, linestyle = '--', label = 'z', color = 'yellow', marker = 'o')
+plt.loglog(time_arr_H, combine_H, linestyle = '--', label = 'H', color = 'red', marker = 'o')
+plt.loglog(time_arr_K, combine_K, linestyle = '--', label = 'K', color = 'magenta', marker = 'o')
+plt.loglog(time_arr_F606W, combine_F606W, linestyle = '--', label = 'F606W', color = 'orange', marker = 'o')
+plt.loglog(time_arr_F110W, combine_F110W, linestyle = '--', label = 'F110W', color = 'blue', marker = 'o')
+plt.loglog(time_arr_F160W, combine_F160W, linestyle = '--', label = 'F160W', color = 'violet', marker = 'o')
 plt.legend()
 plt.xlabel('Log Time')
 plt.ylabel('Log Flux Density')
 plt.title('Combined Refreshed Tophat Two Component Model For 160821B')
 plt.show()
+#%%
+model = 'two_component_kilonova_model'
+GRB = '160821B'
+
+# number of live points. Lower is faster but worse. Higher is slower but more reliable. 
+nlive = 500
+sampler = 'nestle'
+
+# load the default priors for the model 
+priors = redback.priors.get_priors(model=model)
+
+result = redback.fit_model(model=model, sampler=sampler, nlive=nlive, transient=afterglow,
+                           prior=priors, sample='rslice', resume=True)
