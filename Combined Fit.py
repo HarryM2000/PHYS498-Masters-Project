@@ -1,15 +1,11 @@
 import redback
 import pandas as pd
-from bilby.core.prior import PriorDict
+from bilby.core.prior import LogUniform, Uniform
 import bilby
 import matplotlib.pyplot as plt
-from selenium import webdriver
 import numpy as np
-import PhantomJS # ugh
 import matplotlib as mpl
-mpl.rcParams.update(mpl.rcParamsDefault) # Keep this or you're gonna break the LaTeX commands
-from redback.constants import day_to_s
-from redback.model_library import all_models_dict
+mpl.rcParams.update(mpl.rcParamsDefault)
 
 COLOUR_KEY = {
     "pink": "#ff9cc2",
@@ -70,7 +66,7 @@ time_arr_two = np.linspace(0.01, 30, 100)
 time_arr_four = 10**(np.linspace(-2, 1.5, num = 100))
 print('time:', time_arr_four)
 afterglow = redback.transient.Afterglow(
-    name=name, data_mode=data_mode, time=logtime,
+    name=name, data_mode=data_mode, time=time_d,
     flux_density = flux_density, flux_density_err=flux_density_err, frequency=frequency)
 
 g_band_data = data[data["Filter"] == 'g']
@@ -82,7 +78,7 @@ print(freq_arr_g)
 i_band_data = data[data["Filter"] == 'i']
 time_arr_i = (i_band_data["DeltaT"].values)
 freq_arr_i = np.ones(len(time_arr_i))*3.83e14
-r_band_data = data[data["Filter"] == 'r']
+r_band_data = data[data["Filter"] == 'r'] 
 time_arr_r = (r_band_data["DeltaT"].values)
 freq_arr_r = np.ones(len(time_arr_r))*4.86e14
 z_band_data = data[data["Filter"] == 'z']
@@ -143,7 +139,7 @@ plt.title('Two Component Kilonova Model Of 160821B')
 plt.show()
 
 kwargs = dict(frequency=freq_arr, output_format = 'flux_density')
-frequency = kwargs['frequency']
+frequency2 = kwargs['frequency']
 afterglow_tophat_model = redback.transient_models.afterglow_models.tophat_redback_refreshed(time_arr_four, redshift, thv, loge0, thc, g1, et, s1, logn0, p, logepse, logepsb, g0, xiN, **kwargs)
 kwargs = dict(frequency=freq_arr_g, output_format = 'flux_density', data_mode = 'flux_density')
 frequency = freq_arr_g
@@ -172,7 +168,7 @@ afterglow_tophat_F110W = redback.transient_models.afterglow_models.tophat_redbac
 kwargs = dict(frequency=freq_arr_F160W, output_format = 'flux_density')
 frequency = freq_arr_F160W
 afterglow_tophat_F160W = redback.transient_models.afterglow_models.tophat_redback_refreshed(time_arr_F160W, redshift, thv, loge0, thc, g1, et, s1, logn0, p, logepse, logepsb, g0, xiN, **kwargs)
-print(afterglow_tophat_model)
+print("model data:", afterglow_tophat_model)
 logflux = np.log10(afterglow_tophat_model)
 logtime = np.log10(time_arr)
 plt.loglog(time_arr_four, afterglow_tophat_model)
@@ -211,15 +207,40 @@ plt.ylabel('Log Flux Density')
 plt.title('Combined Refreshed Tophat Two Component Model For 160821B')
 plt.show()
 #%%
-model = 'two_component_kilonova_model'
-GRB = '160821B'
+model = 'tophat_and_twocomponent'
+flux_data = [[time_arr_four,freq_arr,combine_model]]
+flux_df = pd.DataFrame(flux_data, columns=['Time', 'Frequency', 'Combined Flux Density'])
+print("tophat array:", flux_df)
+print(flux_df.to_string())
+def model(time_arr_four, redshift, av, thc, loge0, logn0, p, logepse, logepsb, ksin, g0, mej_1, vej_1, temperature_floor_1, kappa_1, kappa_2, temperature_floor_2, mej_2, vej_2, xiN, g1, et, s1):
+    return combine_model
 
-# number of live points. Lower is faster but worse. Higher is slower but more reliable. 
-nlive = 500
+nlive = 500 
 sampler = 'nestle'
 
-# load the default priors for the model 
-priors = redback.priors.get_priors(model=model)
 
-result = redback.fit_model(model=model, sampler=sampler, nlive=nlive, transient=afterglow,
+priors = bilby.core.prior.PriorDict()
+priors['thc'] = Uniform(0, 0.2, 'thc', latex_label=r'$\thc$')
+priors['loge0'] = Uniform(46, 54, 'loge0', latex_label=r'$\loge0$')
+priors['logn0'] = Uniform(-8, 0, 'logn0', latex_label=r'$\logn0$')
+priors['p'] = Uniform(1.3, 3.3, 'p', latex_label=r'$\p$')
+priors['logepse'] = Uniform(-2, 0, 'logepse', latex_label=r'$\logepse$')
+priors['logepsb'] = Uniform(-3, -1, 'logepsb', latex_label=r'$\logepsb$')
+priors['ksin'] = Uniform(0, 0.6, 'ksin', latex_label=r'$\ksin$')
+priors['g0'] = Uniform(50, 150, 'g0', latex_label=r'$\g0$')
+priors['mej_1'] = Uniform(0.0005, 0.0015, 'mej_1', latex_label=r'$\mej_1$')
+priors['vej_1'] = Uniform(0.1, 0.3, 'vej_1', latex_label=r'$\vej_1$')
+priors['temperature_floor_1'] = LogUniform(1500, 3500, 'temperature_floor_1', latex_label=r'$\temperature_floor_1$')
+priors['kappa_1'] = Uniform(0, 20, 'kappa_1', latex_label=r'$\kappa_1$')
+priors['mej_2'] = Uniform(0.005, 0.015, 'mej_2', latex_label=r'$\mej_2$')
+priors['vej_2'] = Uniform(0.0, 0.2, 'vej_2', latex_label=r'$\vej_2$')
+priors['temperature_floor_2'] = LogUniform(1500, 3500, 'temperature_floor_2', latex_label=r'$\temperature_floor_2$')
+priors['kappa_2'] = Uniform(0, 2, 'kappa_2', latex_label=r'$\kappa_2$')
+priors['xiN'] = Uniform(0, 0.3, 'xiN', latex_label=r'$\xiN$')
+priors['g1'] = Uniform(5, 15, 'g1', latex_label=r'$\g1$')
+priors['et'] = Uniform(10, 30, 'et', latex_label=r'$\et$')
+priors['s1'] = Uniform(6, 18, 's1', latex_label=r'$\s1$')
+
+result = redback.fit_model(model=model, sampler=sampler, nlive=nlive, transient=combine_model,
                            prior=priors, sample='rslice', resume=True)
+result.plot_lightcurve(random_models=100, model=model)
