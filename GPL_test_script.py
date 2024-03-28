@@ -63,11 +63,10 @@ sampler = 'dynesty'
 priors = bilby.core.prior.PriorDict()   
 priors['thc'] = Uniform(0, 0.2, 'thc', latex_label=r'$\thc$')
 priors['loge0'] = Uniform(46, 54, 'loge0', latex_label=r'$\loge0$')
-priors['logn0'] = Uniform(-8, 0, 'logn0', latex_label=r'$\logn0$')
+priors['logn0'] = Uniform(-6, 1, 'logn0', latex_label=r'$\logn0$')
 priors['p'] = Uniform(1.3, 3.3, 'p', latex_label=r'$\p$')
-priors['logepse'] = Uniform(-2, 0, 'logepse', latex_label=r'$\logepse$')
-priors['logepsb'] = Uniform(-3, -1, 'logepsb', latex_label=r'$\logepsb$')
-priors['ksin'] = Uniform(0, 0.6, 'ksin', latex_label=r'$\ksin$')
+priors['logepse'] = Uniform(-6, -0.5, 'logepse', latex_label=r'$\logepse$')
+priors['logepsb'] = Uniform(-6, -0.5, 'logepsb', latex_label=r'$\logepsb$')
 priors['g0'] = Uniform(50, 150, 'g0', latex_label=r'$\g0$')
 priors['mej_1'] = Uniform(0.0005, 0.0015, 'mej_1', latex_label=r'$\mej_1$')
 priors['vej_1'] = Uniform(0.1, 0.3, 'vej_1', latex_label=r'$\vej_1$')
@@ -79,8 +78,8 @@ priors['temperature_floor_2'] = LogUniform(1500, 3500, 'temperature_floor_2', la
 priors['kappa_2'] = Uniform(0, 2, 'kappa_2', latex_label=r'$\kappa_2$')
 priors['xiN'] = Uniform(0, 0.3, 'xiN', latex_label=r'$\xiN$')
 priors['g1'] = Uniform(5, 15, 'g1', latex_label=r'$\g1$')
-priors['et'] = Uniform(10, 30, 'et', latex_label=r'$\et$')
-priors['s1'] = Uniform(6, 18, 's1', latex_label=r'$\s1$')
+priors['et'] = Uniform(2, 40, 'et', latex_label=r'$\et$')
+priors['s1'] = Uniform(1, 10, 's1', latex_label=r'$\s1$')
 priors['redshift'] = 0.162
 priors['thv'] = 0.0
 
