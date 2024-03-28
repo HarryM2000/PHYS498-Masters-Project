@@ -60,11 +60,11 @@ g1 = 10
 et = 20
 s1 = 12
 logtime = np.log10(time_d)
-time_arr = np.logspace(-2, 2, num = 26)
+time_arr = np.logspace(-2, 2, num = 30)
 freq_arr = np.ones(len(time_arr))*1e14
 print(time_arr)
-time_arr_two = np.linspace(0.01, 30, 26)
-time_arr_four = 10**(np.linspace(-2, 1.5, num = 26))
+time_arr_two = np.linspace(0.01, 30, 30)
+time_arr_four = 10**(np.linspace(-2, 1.5, num = 30))
 print('time:', time_arr_four)
 afterglow = redback.transient.Afterglow(
     name=name, data_mode=data_mode, time=time_d,
@@ -100,6 +100,9 @@ freq_arr_F110W = np.ones(len(time_arr_F110W))*2.73e14
 F160W_band_data = data[data["Filter"] == 'F160W']
 time_arr_F160W = (F160W_band_data["DeltaT"].values)
 freq_arr_F160W = np.ones(len(time_arr_F160W))*1.88e14
+Radio_band_data = data[data["Filter"] == 'Radio']
+time_arr_Radio = (Radio_band_data["DeltaT"].values)
+freq_arr_Radio = np.ones(len(time_arr_Radio))*7.5e9
 
 freq_arr_2 = np.ones(len(time_arr_two))*1e14
 kwargs = dict(frequency=freq_arr_2, output_format = 'flux_density')
@@ -132,6 +135,9 @@ two_component_F110W = redback.transient_models.kilonova_models.two_component_kil
 kwargs = dict(frequency=freq_arr_F160W, output_format = 'flux_density')
 frequency = freq_arr_F160W
 two_component_F160W = redback.transient_models.kilonova_models.two_component_kilonova_model(time_arr_F160W, redshift, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs)
+kwargs = dict(frequency=freq_arr_Radio, output_format = 'flux_density')
+frequency = freq_arr_Radio
+two_component_Radio = redback.transient_models.kilonova_models.two_component_kilonova_model(time_arr_Radio, redshift, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs)
 
 plt.plot(time_d, two_component_model)
 plt.xlabel('Time (Days)')
@@ -169,6 +175,10 @@ afterglow_tophat_F110W = redback.transient_models.afterglow_models.tophat_redbac
 kwargs = dict(frequency=freq_arr_F160W, output_format = 'flux_density')
 frequency = freq_arr_F160W
 afterglow_tophat_F160W = redback.transient_models.afterglow_models.tophat_redback_refreshed(time_arr_F160W, redshift, thv, loge0, thc, g1, et, s1, logn0, p, logepse, logepsb, g0, xiN, **kwargs)
+kwargs = dict(frequency=freq_arr_Radio, output_format = 'flux_density')
+frequency = freq_arr_Radio
+afterglow_tophat_Radio = redback.transient_models.afterglow_models.tophat_redback_refreshed(time_arr_Radio, redshift, thv, loge0, thc, g1, et, s1, logn0, p, logepse, logepsb, g0, xiN, **kwargs)
+
 print("model data:", afterglow_tophat_model)
 logflux = np.log10(afterglow_tophat_model)
 logtime = np.log10(time_arr)
@@ -188,6 +198,7 @@ combine_K = afterglow_tophat_K + two_component_K
 combine_F606W = afterglow_tophat_F606W + two_component_F606W 
 combine_F110W = afterglow_tophat_F110W + two_component_F110W
 combine_F160W = afterglow_tophat_F160W + two_component_F160W
+combine_Radio = afterglow_tophat_Radio + two_component_Radio
 logflux = np.log10(combine_model)
 logtime = np.log10(time_arr)
 plt.loglog(time_d, two_component_model, label = 'Two Component', color = 'black')
@@ -202,6 +213,7 @@ plt.loglog(time_arr_K, combine_K, linestyle = '--', label = 'K', color = 'magent
 plt.loglog(time_arr_F606W, combine_F606W, linestyle = '--', label = 'F606W', color = 'orange', marker = 'o')
 plt.loglog(time_arr_F110W, combine_F110W, linestyle = '--', label = 'F110W', color = 'blue', marker = 'o')
 plt.loglog(time_arr_F160W, combine_F160W, linestyle = '--', label = 'F160W', color = 'violet', marker = 'o')
+plt.loglog(time_arr_Radio, combine_Radio, linestyle = '--', label = 'Radio', color = '', marker = 'o')
 plt.legend()
 plt.xlabel('Log Time')
 plt.ylabel('Log Flux Density')
@@ -219,25 +231,61 @@ plt.ylabel('Flux Density (mJy)')
 plt.title('Model Vs Raw Flux Data')
 plt.show()
 #%%
-model = 'tophat_and_twocomponent'
-flux_data = [[time_arr_four,freq_arr,combine_model]]
-flux_df = pd.DataFrame(flux_data, columns=['Time', 'Frequency', 'Combined Flux Density'])
-print("tophat array:", flux_df)
-print(flux_df.to_string())
-def model(time_arr_four, redshift, av, thc, loge0, logn0, p, logepse, logepsb, ksin, g0, mej_1, vej_1, temperature_floor_1, kappa_1, kappa_2, temperature_floor_2, mej_2, vej_2, xiN, g1, et, s1):   
-    data_flux = data['flux_density'].values
-    model_flux = combine_model
-    combined_flux = data_flux + model_flux
-    combine = redback.transient.Afterglow(
-        name=name, data_mode=data_mode, time=time_d,
-        flux_density = combined_flux, flux_density_err=flux_density_err, frequency=frequency)
-    return combine
-data_flux = data['flux_density'].values
-model_flux = combine_model
-combined_flux = data_flux + model_flux
-print('Combined (Trust me this time for sure):',combined_flux)
-nlive = 500 
-sampler = 'nestle'
+import redback
+import pandas as pd
+from bilby.core.prior import LogUniform, Uniform
+import bilby
+import matplotlib.pyplot as plt
+import numpy as np
+
+COLOUR_KEY = {
+    "pink": "#ff9cc2",
+    "red": "#ad0000",
+    "orange": "#db8f00",
+    "limegreen": "#97eb10",
+    "green": "#009667",
+    "blue": "#1a41ed",
+    "purple":"#bc46eb",
+    "violet": "#b58aff",
+    }
+
+
+
+def model_func(time, redshift, thv, loge0, thc, g1, et, s1, logn0, p, logepse, logepsb, g0, xiN, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs):
+    
+    AG_model = redback.transient_models.afterglow_models.tophat_redback_refreshed(time, redshift, thv, loge0, thc, g1, et, s1, logn0, p, logepse, logepsb, g0, xiN, **kwargs)
+    KN_model = redback.transient_models.kilonova_models.two_component_kilonova_model(time, redshift, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs)
+    combine = AG_model + KN_model
+    return combine #, AG_model, KN_model
+
+data = pd.read_csv('/Users/harrymccabe/Documents/PHYS498 Masters Project/160821B.csv') #this is a pandas DataFrame
+time_d = data['DeltaT'].values #creates an array of the values in time column
+time_err = data['Time Error'].values
+data_filter = data['Filter'].values
+AB_mag = data['magnitude'].values
+flux_density = data['flux_density'].values #unit is mJy
+flux_density_err = data['Flux Density Error'].values
+frequency = data['Frequency'].values
+
+
+thv = 0.0
+redshift = 0.162
+
+kwargs = dict(frequency=frequency, output_format='flux_density')
+data_mode = 'flux_density'
+name = '160821B'
+
+afterglow = redback.transient.Afterglow(name=name, data_mode='flux_density', time=time_d, flux_density=flux_density, flux_density_err=flux_density_err, frequency=frequency)
+
+model_data = model_func(time_d, 0.162, 0.0, 51.3, 0.1, 10, 10, 6, -4, 2.3, -1, -2, 100, 0.1, 0.001, 0.2, 2500, 10, 0.01, 0.1, 2500, 1, **kwargs)
+
+plt.loglog(time_d, flux_density, 'o', color='blue', markersize=6, alpha=0.2)
+plt.loglog(time_d, model_data, 's', color='red', markersize=6, alpha=0.2)
+
+plt.show()
+
+nlive = 200 
+sampler = 'dynesty'
 
 
 priors = bilby.core.prior.PriorDict()   
@@ -262,6 +310,10 @@ priors['g1'] = Uniform(5, 15, 'g1', latex_label=r'$\g1$')
 priors['et'] = Uniform(10, 30, 'et', latex_label=r'$\et$')
 priors['s1'] = Uniform(6, 18, 's1', latex_label=r'$\s1$')
 
-result = redback.fit_model(model=model, sampler=sampler, nlive=nlive, transient=model,
-                           prior=priors, sample='rslice', resume=True)
-result.plot_lightcurve(random_models=100, model=model)
+model = model_func
+
+model_kwargs = kwargs 
+
+result = redback.fit_model(model=model, sampler=sampler, nlive=nlive, transient=afterglow,
+                           model_kwargs=model_kwargs, prior=priors, sample='rslice', resume=True)
+result.plot_lightcurve(random_models=100, model=model_func)
