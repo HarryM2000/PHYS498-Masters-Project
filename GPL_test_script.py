@@ -56,7 +56,7 @@ plt.loglog(time_d, model_data, 's', color='red', markersize=6, alpha=0.2)
 
 plt.show()
 
-nlive = 200 
+nlive = 3000
 sampler = 'dynesty'
 
 
@@ -88,5 +88,5 @@ model = model_func
 model_kwargs = kwargs 
 
 result = redback.fit_model(model=model, sampler=sampler, nlive=nlive, transient=afterglow,
-                           model_kwargs=model_kwargs, prior=priors, sample='rslice', resume=True)
+                           model_kwargs=model_kwargs, prior=priors, sample='rslice', resume=True, clean=True)
 result.plot_lightcurve(random_models=100, model=model_func)
