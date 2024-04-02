@@ -60,11 +60,11 @@ g1 = 10
 et = 20
 s1 = 12
 logtime = np.log10(time_d)
-time_arr = np.logspace(-2, 2, num = 30)
+time_arr = np.logspace(-2, 2, num = 39)
 freq_arr = np.ones(len(time_arr))*1e14
 print(time_arr)
-time_arr_two = np.linspace(0.01, 30, 30)
-time_arr_four = 10**(np.linspace(-2, 1.5, num = 30))
+time_arr_two = np.linspace(0.01, 30, 39)
+time_arr_four = 10**(np.linspace(-2, 1.5, num = 39))
 print('time:', time_arr_four)
 afterglow = redback.transient.Afterglow(
     name=name, data_mode=data_mode, time=time_d,
@@ -103,6 +103,9 @@ freq_arr_F160W = np.ones(len(time_arr_F160W))*1.88e14
 Radio_band_data = data[data["Filter"] == 'Radio']
 time_arr_Radio = (Radio_band_data["DeltaT"].values)
 freq_arr_Radio = np.ones(len(time_arr_Radio))*7.5e9
+Xray_band_data = data[data["Filter"] == 'X-Ray']
+time_arr_Xray = (Radio_band_data["DeltaT"].values)
+freq_arr_Xray = np.ones(len(time_arr_Radio))*1.2e18
 
 freq_arr_2 = np.ones(len(time_arr_two))*1e14
 kwargs = dict(frequency=freq_arr_2, output_format = 'flux_density')
@@ -138,6 +141,9 @@ two_component_F160W = redback.transient_models.kilonova_models.two_component_kil
 kwargs = dict(frequency=freq_arr_Radio, output_format = 'flux_density')
 frequency = freq_arr_Radio
 two_component_Radio = redback.transient_models.kilonova_models.two_component_kilonova_model(time_arr_Radio, redshift, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs)
+wargs = dict(frequency=freq_arr_Xray, output_format = 'flux_density')
+frequency = freq_arr_Xray
+two_component_Xray = redback.transient_models.kilonova_models.two_component_kilonova_model(time_arr_Xray, redshift, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs)
 
 plt.plot(time_d, two_component_model)
 plt.xlabel('Time (Days)')
@@ -178,6 +184,9 @@ afterglow_tophat_F160W = redback.transient_models.afterglow_models.tophat_redbac
 kwargs = dict(frequency=freq_arr_Radio, output_format = 'flux_density')
 frequency = freq_arr_Radio
 afterglow_tophat_Radio = redback.transient_models.afterglow_models.tophat_redback_refreshed(time_arr_Radio, redshift, thv, loge0, thc, g1, et, s1, logn0, p, logepse, logepsb, g0, xiN, **kwargs)
+kwargs = dict(frequency=freq_arr_Xray, output_format = 'flux_density')
+frequency = freq_arr_Xray
+afterglow_tophat_Xray = redback.transient_models.afterglow_models.tophat_redback_refreshed(time_arr_Xray, redshift, thv, loge0, thc, g1, et, s1, logn0, p, logepse, logepsb, g0, xiN, **kwargs)
 
 print("model data:", afterglow_tophat_model)
 logflux = np.log10(afterglow_tophat_model)
@@ -199,6 +208,8 @@ combine_F606W = afterglow_tophat_F606W + two_component_F606W
 combine_F110W = afterglow_tophat_F110W + two_component_F110W
 combine_F160W = afterglow_tophat_F160W + two_component_F160W
 combine_Radio = afterglow_tophat_Radio + two_component_Radio
+combine_Xray = afterglow_tophat_Xray + two_component_Xray
+
 logflux = np.log10(combine_model)
 logtime = np.log10(time_arr)
 plt.loglog(time_d, two_component_model, label = 'Two Component', color = 'black')
@@ -213,11 +224,41 @@ plt.loglog(time_arr_K, combine_K, linestyle = '--', label = 'K', color = 'magent
 plt.loglog(time_arr_F606W, combine_F606W, linestyle = '--', label = 'F606W', color = 'orange', marker = 'o')
 plt.loglog(time_arr_F110W, combine_F110W, linestyle = '--', label = 'F110W', color = 'blue', marker = 'o')
 plt.loglog(time_arr_F160W, combine_F160W, linestyle = '--', label = 'F160W', color = 'violet', marker = 'o')
-plt.loglog(time_arr_Radio, combine_Radio, linestyle = '--', label = 'Radio', color = '', marker = 'o')
+plt.loglog(time_arr_Radio, combine_Radio, linestyle = '--', label = 'Radio', color = 'brown', marker = 'x')
+plt.loglog(time_arr_Xray, combine_Xray, linestyle = '--', label = 'X-Ray', color = 'lime', marker = 'x')
 plt.legend()
-plt.xlabel('Log Time')
-plt.ylabel('Log Flux Density')
-plt.title('Combined Refreshed Tophat Two Component Model For 160821B')
+plt.xlabel('Log Time (Days)')
+plt.ylabel('Log Flux Density (mJy)')
+plt.title('Combined Refreshed Tophat Two Component Model For 160821B (All Bands)')
+plt.show()
+
+plt.loglog(time_d, two_component_model, label = 'Two Component', color = 'black')
+plt.loglog(time_d, afterglow_tophat_model, label = 'Tophat', color = 'grey')
+plt.loglog(time_d, combine_model, linestyle = ':', label = 'Combined', color = 'black')
+plt.loglog(time_arr_g, combine_g, linestyle = '--', label = 'g', color = 'purple', marker = 'o')
+plt.loglog(time_arr_i, combine_i, linestyle = '--', label = 'i', color = 'green', marker = 'o')
+plt.loglog(time_arr_r, combine_r, linestyle = '--', label = 'r', color = 'cyan', marker = 'o')
+plt.loglog(time_arr_z, combine_z, linestyle = '--', label = 'z', color = 'yellow', marker = 'o')
+plt.loglog(time_arr_H, combine_H, linestyle = '--', label = 'H', color = 'red', marker = 'o')
+plt.loglog(time_arr_K, combine_K, linestyle = '--', label = 'K', color = 'magenta', marker = 'o')
+plt.loglog(time_arr_F606W, combine_F606W, linestyle = '--', label = 'F606W', color = 'orange', marker = 'o')
+plt.loglog(time_arr_F110W, combine_F110W, linestyle = '--', label = 'F110W', color = 'blue', marker = 'o')
+plt.loglog(time_arr_F160W, combine_F160W, linestyle = '--', label = 'F160W', color = 'violet', marker = 'o')
+plt.legend()
+plt.xlabel('Log Time (Days)')
+plt.ylabel('Log Flux Density (mJy)')
+plt.title('Combined Refreshed Tophat Two Component Model For 160821B (Excluding Radio And X-Ray)')
+plt.show()
+
+plt.loglog(time_d, two_component_model, label = 'Two Component', color = 'black')
+plt.loglog(time_d, afterglow_tophat_model, label = 'Tophat', color = 'grey')
+plt.loglog(time_d, combine_model, linestyle = ':', label = 'Combined', color = 'black')
+plt.loglog(time_arr_Radio, combine_Radio, linestyle = '--', label = 'Radio', color = 'brown', marker = 'x')
+plt.loglog(time_arr_Xray, combine_Xray, linestyle = '--', label = 'X-Ray', color = 'lime', marker = 'x')
+plt.legend()
+plt.xlabel('Log Time (Days)')
+plt.ylabel('Log Flux Density (mJy)')
+plt.title('Combined Refreshed Tophat Two Component Model For 160821B (Radio And X-Ray)')
 plt.show()
 #%%
 data = pd.read_csv('/Users/harrymccabe/Documents/PHYS498 Masters Project/160821B.csv')
@@ -289,6 +330,8 @@ sampler = 'dynesty'
 
 
 priors = bilby.core.prior.PriorDict()   
+priors['redshift'] = 0.162
+priors['thv'] = 0.0
 priors['thc'] = Uniform(0, 0.2, 'thc', latex_label=r'$\thc$')
 priors['loge0'] = Uniform(46, 54, 'loge0', latex_label=r'$\loge0$')
 priors['logn0'] = Uniform(-8, 0, 'logn0', latex_label=r'$\logn0$')
