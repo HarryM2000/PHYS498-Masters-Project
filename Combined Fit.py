@@ -35,6 +35,23 @@ bands = data['Filter'].values
 colour = data['Colour'].values
 data_mode = 'flux_density'
 name = '160821B'
+active_filters = ['g','i','r','z','H','K','F606W','F110W','F160W']
+flux_density_kilo = flux_density[data['Filter'].isin(active_filters)]
+flux_density_err_kilo = flux_density_err[data['Filter'].isin(active_filters)]
+time_d_kilo = time_d[data['Filter'].isin(active_filters)]
+freq_arr_kilo = np.ones(len(time_d_kilo))*1e14
+
+g_band_error = flux_density_err[data["Filter"] == 'g']
+i_band_error = flux_density_err[data["Filter"] == 'i']
+r_band_error = flux_density_err[data["Filter"] == 'r']
+z_band_error = flux_density_err[data["Filter"] == 'z']
+H_band_error = flux_density_err[data["Filter"] == 'H']
+K_band_error = flux_density_err[data["Filter"] == 'K']
+F606W_band_error = flux_density_err[data["Filter"] == 'F606W']
+F110W_band_error = flux_density_err[data["Filter"] == 'F110W']
+F160W_band_error = flux_density_err[data["Filter"] == 'F160W']
+Radio_band_error = flux_density_err[data["Filter"] == 'Radio']
+Xray_band_error = flux_density_err[data["Filter"] == 'X-Ray']
 sigma = 1.35e-29
 redshift = 0.162
 av = 0.118
@@ -60,11 +77,11 @@ g1 = 10
 et = 20
 s1 = 12
 logtime = np.log10(time_d)
-time_arr = np.logspace(-2, 2, num = 39)
+time_arr = np.logspace(-2, 2, num = 37)
 freq_arr = np.ones(len(time_arr))*1e14
 print(time_arr)
-time_arr_two = np.linspace(0.01, 30, 39)
-time_arr_four = 10**(np.linspace(-2, 1.5, num = 39))
+time_arr_two = np.linspace(0.01, 30, 37)
+time_arr_four = 10**(np.linspace(-2, 1.5, num = 37))
 print('time:', time_arr_four)
 afterglow = redback.transient.Afterglow(
     name=name, data_mode=data_mode, time=time_d,
@@ -102,10 +119,11 @@ time_arr_F160W = (F160W_band_data["DeltaT"].values)
 freq_arr_F160W = np.ones(len(time_arr_F160W))*1.88e14
 Radio_band_data = data[data["Filter"] == 'Radio']
 time_arr_Radio = (Radio_band_data["DeltaT"].values)
-freq_arr_Radio = np.ones(len(time_arr_Radio))*7.5e9
+freq_arr_Radio = np.ones(len(time_arr_Radio))*9.8e9
 Xray_band_data = data[data["Filter"] == 'X-Ray']
-time_arr_Xray = (Radio_band_data["DeltaT"].values)
-freq_arr_Xray = np.ones(len(time_arr_Radio))*1.2e18
+time_arr_Xray = (Xray_band_data["DeltaT"].values)
+freq_arr_Xray = np.ones(len(time_arr_Xray))*2.4e17
+print("xray data:", Xray_band_data)
 
 freq_arr_2 = np.ones(len(time_arr_two))*1e14
 kwargs = dict(frequency=freq_arr_2, output_format = 'flux_density')
@@ -226,7 +244,7 @@ plt.loglog(time_arr_F110W, combine_F110W, linestyle = '--', label = 'F110W', col
 plt.loglog(time_arr_F160W, combine_F160W, linestyle = '--', label = 'F160W', color = 'violet', marker = 'o')
 plt.loglog(time_arr_Radio, combine_Radio, linestyle = '--', label = 'Radio', color = 'brown', marker = 'x')
 plt.loglog(time_arr_Xray, combine_Xray, linestyle = '--', label = 'X-Ray', color = 'lime', marker = 'x')
-plt.legend()
+plt.legend(loc = 'lower left')
 plt.xlabel('Log Time (Days)')
 plt.ylabel('Log Flux Density (mJy)')
 plt.title('Combined Refreshed Tophat Two Component Model For 160821B (All Bands)')
@@ -244,7 +262,7 @@ plt.loglog(time_arr_K, combine_K, linestyle = '--', label = 'K', color = 'magent
 plt.loglog(time_arr_F606W, combine_F606W, linestyle = '--', label = 'F606W', color = 'orange', marker = 'o')
 plt.loglog(time_arr_F110W, combine_F110W, linestyle = '--', label = 'F110W', color = 'blue', marker = 'o')
 plt.loglog(time_arr_F160W, combine_F160W, linestyle = '--', label = 'F160W', color = 'violet', marker = 'o')
-plt.legend()
+plt.legend(loc = 'lower left')
 plt.xlabel('Log Time (Days)')
 plt.ylabel('Log Flux Density (mJy)')
 plt.title('Combined Refreshed Tophat Two Component Model For 160821B (Excluding Radio And X-Ray)')
@@ -255,7 +273,7 @@ plt.loglog(time_d, afterglow_tophat_model, label = 'Tophat', color = 'grey')
 plt.loglog(time_d, combine_model, linestyle = ':', label = 'Combined', color = 'black')
 plt.loglog(time_arr_Radio, combine_Radio, linestyle = '--', label = 'Radio', color = 'brown', marker = 'x')
 plt.loglog(time_arr_Xray, combine_Xray, linestyle = '--', label = 'X-Ray', color = 'lime', marker = 'x')
-plt.legend()
+plt.legend(loc = 'lower left')
 plt.xlabel('Log Time (Days)')
 plt.ylabel('Log Flux Density (mJy)')
 plt.title('Combined Refreshed Tophat Two Component Model For 160821B (Radio And X-Ray)')
@@ -320,43 +338,129 @@ afterglow = redback.transient.Afterglow(name=name, data_mode='flux_density', tim
 
 model_data = model_func(time_d, 0.162, 0.0, 51.3, 0.1, 10, 10, 6, -4, 2.3, -1, -2, 100, 0.1, 0.001, 0.2, 2500, 10, 0.01, 0.1, 2500, 1, **kwargs)
 
-plt.loglog(time_d, flux_density, 'o', color='blue', markersize=6, alpha=0.2)
-plt.loglog(time_d, model_data, 's', color='red', markersize=6, alpha=0.2)
 
-plt.show()
-
-nlive = 200 
+nlive = 2000
 sampler = 'dynesty'
 
 
 priors = bilby.core.prior.PriorDict()   
 priors['redshift'] = 0.162
 priors['thv'] = 0.0
-priors['thc'] = Uniform(0, 0.2, 'thc', latex_label=r'$\thc$')
-priors['loge0'] = Uniform(46, 54, 'loge0', latex_label=r'$\loge0$')
-priors['logn0'] = Uniform(-8, 0, 'logn0', latex_label=r'$\logn0$')
-priors['p'] = Uniform(1.3, 3.3, 'p', latex_label=r'$\p$')
-priors['logepse'] = Uniform(-2, 0, 'logepse', latex_label=r'$\logepse$')
-priors['logepsb'] = Uniform(-3, -1, 'logepsb', latex_label=r'$\logepsb$')
-priors['ksin'] = Uniform(0, 0.6, 'ksin', latex_label=r'$\ksin$')
-priors['g0'] = Uniform(50, 150, 'g0', latex_label=r'$\g0$')
-priors['mej_1'] = Uniform(0.0005, 0.0015, 'mej_1', latex_label=r'$\mej_1$')
-priors['vej_1'] = Uniform(0.1, 0.3, 'vej_1', latex_label=r'$\vej_1$')
-priors['temperature_floor_1'] = LogUniform(1500, 3500, 'temperature_floor_1', latex_label=r'$\temperature_floor_1$')
-priors['kappa_1'] = Uniform(0, 20, 'kappa_1', latex_label=r'$\kappa_1$')
-priors['mej_2'] = Uniform(0.005, 0.015, 'mej_2', latex_label=r'$\mej_2$')
-priors['vej_2'] = Uniform(0.0, 0.2, 'vej_2', latex_label=r'$\vej_2$')
-priors['temperature_floor_2'] = LogUniform(1500, 3500, 'temperature_floor_2', latex_label=r'$\temperature_floor_2$')
-priors['kappa_2'] = Uniform(0, 2, 'kappa_2', latex_label=r'$\kappa_2$')
-priors['xiN'] = Uniform(0, 0.3, 'xiN', latex_label=r'$\xiN$')
-priors['g1'] = Uniform(5, 15, 'g1', latex_label=r'$\g1$')
-priors['et'] = Uniform(10, 30, 'et', latex_label=r'$\et$')
-priors['s1'] = Uniform(6, 18, 's1', latex_label=r'$\s1$')
+priors['thc'] = Uniform(0.02, 0.2, 'thc', latex_label='thc')
+priors['loge0'] = Uniform(46, 54, 'loge0', latex_label='loge0')
+priors['logn0'] = Uniform(-8, 0.08, 'logn0', latex_label='logn0')
+priors['p'] = Uniform(1.3, 3.3, 'p', latex_label='p')
+priors['logepse'] = Uniform(-2, 0.02, 'logepse', latex_label='logepse')
+priors['logepsb'] = Uniform(-3, -1, 'logepsb', latex_label='logepsb')
+priors['ksin'] = Uniform(0.02, 0.6, 'ksin', latex_label='ksin')
+priors['g0'] = Uniform(50, 150, 'g0', latex_label='g0')
+priors['mej_1'] = Uniform(0.0005, 0.0015, 'mej_1', latex_label='mej_1')
+priors['vej_1'] = Uniform(0.1, 0.3, 'vej_1', latex_label='vej_1')
+priors['temperature_floor_1'] = LogUniform(1500, 3500, 'temperature_floor_1', latex_label='temperature_floor_1')
+priors['kappa_1'] = Uniform(0.02, 20, 'kappa_1', latex_label='kappa_1')
+priors['mej_2'] = Uniform(0.005, 0.015, 'mej_2', latex_label='mej_2')
+priors['vej_2'] = Uniform(0.02, 0.2, 'vej_2', latex_label='vej_2')
+priors['temperature_floor_2'] = LogUniform(1500, 3500, 'temperature_floor_2', latex_label='temperature_floor_2')
+priors['kappa_2'] = Uniform(0.02, 2, 'kappa_2', latex_label='kappa_2')
+priors['xiN'] = Uniform(0.03, 1, 'xiN', latex_label='xiN')
+priors['g1'] = Uniform(5, 15, 'g1', latex_label='g1')
+priors['et'] = Uniform(10, 30, 'et', latex_label='et')
+priors['s1'] = Uniform(6, 18, 's1', latex_label='s1')
 
 model = model_func
 
 model_kwargs = kwargs 
 
 result = redback.fit_model(model=model, sampler=sampler, nlive=nlive, transient=afterglow,
-                           model_kwargs=model_kwargs, prior=priors, sample='rslice', resume=True)
+                           model_kwargs=model_kwargs, prior=priors, sample='rslice', resume=True, clean =True)
+result.plot_lightcurve(random_models=100, model=model_func)
+#%%
+import redback
+import pandas as pd
+from bilby.core.prior import LogUniform, Uniform
+import bilby
+import matplotlib.pyplot as plt
+import numpy as np
+
+COLOUR_KEY = {
+    "pink": "#ff9cc2",
+    "red": "#ad0000",
+    "orange": "#db8f00",
+    "limegreen": "#97eb10",
+    "green": "#009667",
+    "blue": "#1a41ed",
+    "purple":"#bc46eb",
+    "violet": "#b58aff",
+    }
+
+
+
+def model_func(time, redshift, thv, loge0, thc, g1, et, s1, logn0, p, logepse, logepsb, g0, xiN, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs):
+    
+    AG_model = redback.transient_models.afterglow_models.tophat_redback_refreshed(time, redshift, thv, loge0, thc, g1, et, s1, logn0, p, logepse, logepsb, g0, xiN, **kwargs)
+    KN_model = redback.transient_models.kilonova_models.two_component_kilonova_model(time, redshift, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs)
+    combine = AG_model + KN_model
+    return combine #, AG_model, KN_model
+
+data = pd.read_csv('/Users/harrymccabe/Documents/PHYS498 Masters Project/160821B.csv') #this is a pandas DataFrame
+time_d = data['DeltaT'].values #creates an array of the values in time column
+time_err = data['Time Error'].values
+data_filter = data['Filter'].values
+AB_mag = data['magnitude'].values
+flux_density = data['flux_density'].values #unit is mJy
+flux_density_err = 1e3 * data['Flux Density Error'].values
+frequency = data['Frequency'].values
+
+thv = 0.0
+redshift = 0.162
+
+kwargs = dict(frequency=frequency, output_format='flux_density')
+data_mode = 'flux_density'
+name = '160821B'
+
+
+
+afterglow = redback.transient.Afterglow(name=name, data_mode='flux_density', time=time_d, flux_density=flux_density, flux_density_err=flux_density_err, frequency=frequency)
+
+model_data = model_func(time_d, 0.162, 0.0, 51.3, 0.1, 10, 10, 6, -4, 2.3, -1, -2, 100, 0.1, 0.001, 0.2, 2500, 10, 0.01, 0.1, 2500, 1, **kwargs)
+
+
+plt.loglog(time_d, flux_density, 'o', color='blue', markersize=6, alpha=0.2)
+plt.loglog(time_d, model_data, 's', color='red', markersize=6, alpha=0.2)
+
+plt.show()
+
+nlive = 3000
+sampler = 'dynesty'
+
+
+priors = bilby.core.prior.PriorDict()   
+priors['thc'] = Uniform(0.02, 0.2, 'thc', latex_label=r'$\thc$')
+priors['loge0'] = Uniform(46, 54, 'loge0', latex_label=r'$\loge0$')
+priors['logn0'] = Uniform(-6, 1, 'logn0', latex_label=r'$\logn0$')
+priors['p'] = Uniform(1.3, 3.3, 'p', latex_label=r'$\p$')
+priors['logepse'] = Uniform(-6, -0.5, 'logepse', latex_label=r'$\logepse$')
+priors['logepsb'] = Uniform(-6, -0.5, 'logepsb', latex_label=r'$\logepsb$')
+priors['g0'] = Uniform(50, 150, 'g0', latex_label=r'$\g0$')
+priors['mej_1'] = Uniform(0.0005, 0.0015, 'mej_1', latex_label=r'$\mej_1$')
+priors['vej_1'] = Uniform(0.1, 0.3, 'vej_1', latex_label=r'$\vej_1$')
+priors['temperature_floor_1'] = LogUniform(1500, 3500, 'temperature_floor_1', latex_label=r'$\temperature_floor_1$')
+priors['kappa_1'] = Uniform(0, 20, 'kappa_1', latex_label=r'$\kappa_1$')
+priors['mej_2'] = Uniform(0.005, 0.015, 'mej_2', latex_label=r'$\mej_2$')
+priors['vej_2'] = Uniform(0.002, 0.2, 'vej_2', latex_label=r'$\vej_2$')
+priors['temperature_floor_2'] = LogUniform(1500, 3500, 'temperature_floor_2', latex_label=r'$\temperature_floor_2$')
+priors['kappa_2'] = Uniform(0, 2, 'kappa_2', latex_label=r'$\kappa_2$')
+priors['xiN'] = Uniform(0.03, 1, 'xiN', latex_label=r'$\xiN$')
+priors['g1'] = Uniform(5, 15, 'g1', latex_label=r'$\g1$')
+priors['et'] = Uniform(2, 40, 'et', latex_label=r'$\et$')
+priors['s1'] = Uniform(1, 10, 's1', latex_label=r'$\s1$')
+priors['redshift'] = 0.162
+priors['thv'] = 0.0
+
+model = model_func
+
+model_kwargs = kwargs 
+
+result = redback.fit_model(model=model, sampler=sampler, nlive=nlive, transient=afterglow,
+                           model_kwargs=model_kwargs, prior=priors, sample='rslice', resume=True, clean=True)
 result.plot_lightcurve(random_models=100, model=model_func)

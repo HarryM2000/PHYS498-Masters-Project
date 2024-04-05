@@ -23,6 +23,7 @@ COLOUR_KEY = {
     "violet": "#b58aff",
     }
 #
+
 redshift = 0.0099 # Speaks for itself really
 mej_dyn = 0.001 # Dynamical mass of ejecta in solar massees
 mej_disk = 0.01 # Disk mass of ejecta in solar masses
@@ -37,6 +38,8 @@ kne = 'at2017gfo'
 # gets the magnitude data for AT2017gfo, the KN associated with GW170817
 data = redback.get_data.get_kilonova_data_from_open_transient_catalog_data(transient=kne)
 print(data)
+time_d = data[('time (days)')].values
+
 # creates a GRBDir with GRB
 kilonova = redback.kilonova.Kilonova.from_open_access_catalogue(
     name=kne, data_mode="flux_density")
@@ -113,6 +116,8 @@ time_arr_J = (J_band_data["time (days)"].values)
 freq_arr_J = np.ones(len(time_arr_J))*2.40e14
 print(time_arr_J)
 print(freq_arr_J)
+
+
 kwargs = dict(frequency=freq_arr_g, output_format = 'flux_density')
 frequency = freq_arr_g
 kilonova_bns_g = redback.transient_models.kilonova_models.bulla_bns_kilonova(time_arr_g, redshift, mej_dyn, mej_disk, phi, costheta_obs, **kwargs)
@@ -131,12 +136,13 @@ kilonova_bns_y = redback.transient_models.kilonova_models.bulla_bns_kilonova(tim
 kwargs = dict(frequency=freq_arr_J, output_format = 'flux_density')
 frequency = freq_arr_J
 kilonova_bns_J = redback.transient_models.kilonova_models.bulla_bns_kilonova(time_arr_J, redshift, mej_dyn, mej_disk, phi, costheta_obs, **kwargs)
-plt.semilogy(time_arr_g, kilonova_bns_g, label = 'g-band 475nm')
-plt.semilogy(time_arr_i, kilonova_bns_i, label ='i-band 783nm')
-plt.semilogy(time_arr_r, kilonova_bns_r, label = 'r-band 617nm')
-plt.semilogy(time_arr_z, kilonova_bns_z, label ='z-band 867nm')
-plt.semilogy(time_arr_y, kilonova_bns_y, label = 'y-band 962nm')
-plt.semilogy(time_arr_J, kilonova_bns_J, label ='J-band 1.25μm')
+
+plt.semilogy(time_arr_g, kilonova_bns_g, label = 'g-band 475nm', marker = 'o')
+plt.semilogy(time_arr_i, kilonova_bns_i, label ='i-band 783nm', marker = 'o')
+plt.semilogy(time_arr_r, kilonova_bns_r, label = 'r-band 617nm', marker = 'o')
+plt.semilogy(time_arr_z, kilonova_bns_z, label ='z-band 867nm', marker = 'o')
+plt.semilogy(time_arr_y, kilonova_bns_y, label = 'y-band 962nm', marker = 'o')
+plt.semilogy(time_arr_J, kilonova_bns_J, label ='J-band 1.25μm', marker = 'o')
 plt.legend()
 plt.xlabel('Time (Days)')
 plt.ylabel('Log Flux Density (mJy)')
