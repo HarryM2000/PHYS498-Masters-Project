@@ -1,3 +1,4 @@
+# Some experimenting with the raw data and importing and formatting important for the sampling done here
 import redback
 import pandas as pd
 from bilby.core.prior import LogUniform, Uniform
@@ -59,7 +60,7 @@ thv = 0.0
 loge0 = 51
 thc = 0.1
 logn0 = -4
-p = 2.3 # Reference Gavin 
+p = 2.3  
 logepse = -1
 logepsb = -2
 ksin = 0.3
@@ -168,7 +169,9 @@ plt.xlabel('Time (Days)')
 plt.ylabel('Intensity (mJy)')
 plt.title('Two Component Kilonova Model Of 160821B')
 plt.show()
-
+df.loc[df["Filter"] == "X-Ray" , "flux_density"] = 0
+df.loc[df["Filter"] == "Radio" , "flux_density"] = 0
+print(df)
 kwargs = dict(frequency=freq_arr, output_format = 'flux_density')
 frequency2 = kwargs['frequency']
 afterglow_tophat_model = redback.transient_models.afterglow_models.tophat_redback_refreshed(time_d, redshift, thv, loge0, thc, g1, et, s1, logn0, p, logepse, logepsb, g0, xiN, **kwargs)
@@ -215,6 +218,8 @@ plt.ylabel('Log Flux Density')
 plt.title('Refreshed Shock Afterglow Lightcurve Model Loge0 = 51')
 plt.show()
 
+condition = ([data["Filter"] == 'X-Ray'])
+print(condition)
 combine_model = afterglow_tophat_model + two_component_model 
 combine_g = afterglow_tophat_g + two_component_g 
 combine_i = afterglow_tophat_i + two_component_i 
@@ -279,6 +284,7 @@ plt.ylabel('Log Flux Density (mJy)')
 plt.title('Combined Refreshed Tophat Two Component Model For 160821B (Radio And X-Ray)')
 plt.show()
 #%%
+# Quick visualisation of model and raw data
 data = pd.read_csv('/Users/harrymccabe/Documents/PHYS498 Masters Project/160821B.csv')
 z = data['Frequency'].values
 plt.scatter(time_d, flux_density, label = 'Data', c = z, marker = 'o', cmap = 'Blues')
@@ -290,11 +296,16 @@ plt.ylabel('Flux Density (mJy)')
 plt.title('Model Vs Raw Flux Data')
 plt.show()
 #%%
+# THIS TAKES A VERY LONG TIME TO RUN!!! #
+# THIS TAKES A VERY LONG TIME TO RUN!!! #
+# THIS TAKES A VERY LONG TIME TO RUN!!! #
 import redback
 import pandas as pd
 from bilby.core.prior import LogUniform, Uniform
 import bilby
-import matplotlib.pyplot as plt
+import matplotlib as plt
+import matplotlib as mpl
+mpl.rcParams.update(mpl.rcParamsDefault)
 import numpy as np
 
 COLOUR_KEY = {
@@ -317,7 +328,95 @@ def model_func(time, redshift, thv, loge0, thc, g1, et, s1, logn0, p, logepse, l
     combine = AG_model + KN_model
     return combine #, AG_model, KN_model
 
-data = pd.read_csv('/Users/harrymccabe/Documents/PHYS498 Masters Project/160821B.csv') #this is a pandas DataFrame
+data = pd.read_csv('/Users/harrymccabe/Documents/PHYS498 Masters Project/160821B copy.csv') #this is a pandas DataFrame
+df = pd.DataFrame(data=data)
+time_d = data['DeltaT'].values #creates an array of the values in time column
+time_err = data['Time Error'].values
+data_filter = data['Filter'].values
+AB_mag = data['magnitude'].values
+flux_density = data['flux_density'].values #unit is mJy
+flux_density_err = data['Flux Density Error'].values
+frequency = redback.utils.bands_to_frequency(data_filter)
+
+kwargs = dict(frequency=frequency, output_format='flux_density')
+name = '160821B'
+
+afterglow = redback.transient.Afterglow(name=name, data_mode='flux_density', time=time_d, flux_density=flux_density, flux_density_err=flux_density_err, frequency=frequency)
+
+model_data = model_func(time_d, 0.162, 0.0, 51.3, 0.1, 10, 20, 12, -4, 2.3, -1, -2, 100, 0.1, 0.001, 0.2, 2500, 1, 0.01, 0.1, 2500, 10, **kwargs)
+
+
+nlive = 10000
+sampler = 'emcee'
+
+priors = bilby.core.prior.PriorDict()   
+priors['redshift'] = 0.162
+priors['thv'] = 0.0
+priors['loge0'] = Uniform(49, 53, 'loge0', latex_label='loge0')
+priors['thc'] = Uniform(0.02, 0.2, 'thc', latex_label='thc')
+priors['logn0'] = Uniform(-6, 1, 'logn0', latex_label='logn0')
+priors['p'] = Uniform(1.5, 3.1, 'p', latex_label='p')
+priors['logepse'] = Uniform(-6, -0.5, 'logepse', latex_label='logepse')
+priors['logepsb'] = Uniform(-6, -0.5, 'logepsb', latex_label='logepsb')
+priors['g0'] = Uniform(50, 150, 'g0', latex_label='g0')
+priors['xiN'] = Uniform(0.01, 1, 'xiN', latex_label='xiN')
+priors['mej_1'] = Uniform(0.0005, 0.0015, 'mej_1', latex_label='mej_1')
+priors['vej_1'] = Uniform(0.1, 0.3, 'vej_1', latex_label='vej_1')
+priors['temperature_floor_1'] = LogUniform(1500, 3500, 'temperature_floor_1', latex_label='temperature_floor_1')
+priors['kappa_1'] = Uniform(1, 20, 'kappa_1', latex_label='kappa_1')
+priors['mej_2'] = Uniform(0.005, 0.015, 'mej_2', latex_label='mej_2')
+priors['vej_2'] = Uniform(0.01, 0.2, 'vej_2', latex_label='vej_2')
+priors['temperature_floor_2'] = LogUniform(1500, 3500, 'temperature_floor_2', latex_label='temperature_floor_2')
+priors['kappa_2'] = Uniform(0.1, 2, 'kappa_2', latex_label='kappa_2')
+priors['g1'] = Uniform(5, 15, 'g1', latex_label='g1')
+priors['et'] = Uniform(15, 25, 'et', latex_label='et')
+priors['s1'] = Uniform(9, 15, 's1', latex_label='s1')
+
+model = model_func
+ 
+model_kwargs = kwargs 
+
+result = redback.fit_model(model=model, sampler=sampler, nlive=nlive, transient=afterglow,
+                           model_kwargs=model_kwargs, prior=priors, nburn = 1000, resume=True, clean = True)
+result.plot_lightcurve(random_models=100, model=model_func)
+result.plot_multiband_lightcurve(model = model_func)
+result.plot_corner(save=True)
+plt.show()
+#%%
+# THIS TAKES A VERY LONG TIME TO RUN!!! #
+# THIS TAKES A VERY LONG TIME TO RUN!!! #
+# THIS TAKES A VERY LONG TIME TO RUN!!! #
+# Sampling code #
+import redback
+import pandas as pd
+from bilby.core.prior import LogUniform, Uniform
+import bilby
+import matplotlib as mpl
+mpl.rcParams.update(mpl.rcParamsDefault)
+import numpy as np
+
+COLOUR_KEY = {
+    "pink": "#ff9cc2",
+    "red": "#ad0000",
+    "orange": "#db8f00",
+    "limegreen": "#97eb10",
+    "green": "#009667",
+    "blue": "#1a41ed",
+    "purple":"#bc46eb",
+    "violet": "#b58aff",
+    }
+
+
+
+def model_func(time, redshift, thv, loge0, thc, logn0, p, logepse, logepsb, g0, xiN, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs):
+    
+    AG_model = redback.transient_models.afterglow_models.tophat_redback(time, redshift, thv, loge0, thc, logn0, p, logepse, logepsb, g0, xiN, **kwargs)
+    KN_model = redback.transient_models.kilonova_models.two_component_kilonova_model(time, redshift, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs)
+    #print(KN_model)
+    combine = AG_model + KN_model
+    return combine #, AG_model, KN_model
+
+data = pd.read_csv('/Users/harrymccabe/Documents/PHYS498 Masters Project/160821B.csv') #Change as needed to your path
 time_d = data['DeltaT'].values #creates an array of the values in time column
 time_err = data['Time Error'].values
 data_filter = data['Filter'].values
@@ -336,131 +435,215 @@ name = '160821B'
 
 afterglow = redback.transient.Afterglow(name=name, data_mode='flux_density', time=time_d, flux_density=flux_density, flux_density_err=flux_density_err, frequency=frequency)
 
-model_data = model_func(time_d, 0.162, 0.0, 51.3, 0.1, 10, 10, 6, -4, 2.3, -1, -2, 100, 0.1, 0.001, 0.2, 2500, 10, 0.01, 0.1, 2500, 1, **kwargs)
+model_data = model_func(time_d, 0.162, 0.0, 51.3, 0.1, -4, 2.3, -1, -2, 100, 0.1, 0.001, 0.2, 2500, 10, 0.01, 0.1, 2500, 1, **kwargs)
 
 
-nlive = 2000
-sampler = 'dynesty'
-
+nlive = 10000
+sampler = 'emcee'
 
 priors = bilby.core.prior.PriorDict()   
 priors['redshift'] = 0.162
 priors['thv'] = 0.0
+priors['loge0'] = Uniform(49, 53, 'loge0', latex_label='loge0')
 priors['thc'] = Uniform(0.02, 0.2, 'thc', latex_label='thc')
-priors['loge0'] = Uniform(46, 54, 'loge0', latex_label='loge0')
-priors['logn0'] = Uniform(-8, 0.08, 'logn0', latex_label='logn0')
-priors['p'] = Uniform(1.3, 3.3, 'p', latex_label='p')
-priors['logepse'] = Uniform(-2, 0.02, 'logepse', latex_label='logepse')
-priors['logepsb'] = Uniform(-3, -1, 'logepsb', latex_label='logepsb')
-priors['ksin'] = Uniform(0.02, 0.6, 'ksin', latex_label='ksin')
+priors['logn0'] = Uniform(-6, 1, 'logn0', latex_label='logn0')
+priors['p'] = Uniform(1.5, 3.1, 'p', latex_label='p')
+priors['logepse'] = Uniform(-6, -0.5, 'logepse', latex_label='logepse')
+priors['logepsb'] = Uniform(-6, -0.5, 'logepsb', latex_label='logepsb')
 priors['g0'] = Uniform(50, 150, 'g0', latex_label='g0')
+priors['xiN'] = Uniform(0.01, 1, 'xiN', latex_label='xiN')
 priors['mej_1'] = Uniform(0.0005, 0.0015, 'mej_1', latex_label='mej_1')
 priors['vej_1'] = Uniform(0.1, 0.3, 'vej_1', latex_label='vej_1')
 priors['temperature_floor_1'] = LogUniform(1500, 3500, 'temperature_floor_1', latex_label='temperature_floor_1')
-priors['kappa_1'] = Uniform(0.02, 20, 'kappa_1', latex_label='kappa_1')
+priors['kappa_1'] = Uniform(1, 20, 'kappa_1', latex_label='kappa_1')
 priors['mej_2'] = Uniform(0.005, 0.015, 'mej_2', latex_label='mej_2')
-priors['vej_2'] = Uniform(0.02, 0.2, 'vej_2', latex_label='vej_2')
+priors['vej_2'] = Uniform(0.01, 0.2, 'vej_2', latex_label='vej_2')
 priors['temperature_floor_2'] = LogUniform(1500, 3500, 'temperature_floor_2', latex_label='temperature_floor_2')
-priors['kappa_2'] = Uniform(0.02, 2, 'kappa_2', latex_label='kappa_2')
-priors['xiN'] = Uniform(0.03, 1, 'xiN', latex_label='xiN')
-priors['g1'] = Uniform(5, 15, 'g1', latex_label='g1')
-priors['et'] = Uniform(10, 30, 'et', latex_label='et')
-priors['s1'] = Uniform(6, 18, 's1', latex_label='s1')
+priors['kappa_2'] = Uniform(0.1, 2, 'kappa_2', latex_label='kappa_2')
+
 
 model = model_func
 
 model_kwargs = kwargs 
 
-result = redback.fit_model(model=model, sampler=sampler, nlive=nlive, transient=afterglow,
-                           model_kwargs=model_kwargs, prior=priors, sample='rslice', resume=True, clean =True)
+result = redback.fit_model(name = name, model=model, sampler=sampler, nlive=nlive, transient=afterglow,
+                           model_kwargs=model_kwargs, prior=priors, nburn = 1000, live_dangerously = True, sample='rslice', resume=True, clean = True, data_mode = 'flux_density')
 result.plot_lightcurve(random_models=100, model=model_func)
 #%%
-import redback
-import pandas as pd
-from bilby.core.prior import LogUniform, Uniform
-import bilby
-import matplotlib.pyplot as plt
-import numpy as np
+# TOP GAT SAMPLING PLOTTER
+final = redback.result.read_in_result('/Users/harrymccabe/Documents/PHYS498 Masters Project/GRB160821B_result_TH.json')
+def model_func(time, redshift, thv, loge0, thc, logn0, p, logepse, logepsb, g0, xiN, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs):
+    
+    AG_model = redback.transient_models.afterglow_models.tophat_redback(time, redshift, thv, loge0, thc, logn0, p, logepse, logepsb, g0, xiN, **kwargs)
+    KN_model = redback.transient_models.kilonova_models.two_component_kilonova_model(time, redshift, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs)
+    combine = AG_model + KN_model
+    return combine 
 
-COLOUR_KEY = {
-    "pink": "#ff9cc2",
-    "red": "#ad0000",
-    "orange": "#db8f00",
-    "limegreen": "#97eb10",
-    "green": "#009667",
-    "blue": "#1a41ed",
-    "purple":"#bc46eb",
-    "violet": "#b58aff",
-    }
-
-
-
+fig1, ax1 = plt.subplots(1,1)
+ax1.set_xscale('log')
+final.plot_lightcurve(figure = fig1, axes = ax1, random_models = 100, model = model_func, priors = False, show = True, fontsize_legend = 9, legend_location = 'upper right')
+final.plot_multiband_lightcurve(model = model_func, axes = ax1)
+#%%
+# REFRESHED SHOCK SAMPLING PLOTTER
+final = redback.result.read_in_result('/Users/harrymccabe/Documents/PHYS498 Masters Project/GRB160821B_result_rTH.json')
 def model_func(time, redshift, thv, loge0, thc, g1, et, s1, logn0, p, logepse, logepsb, g0, xiN, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs):
     
     AG_model = redback.transient_models.afterglow_models.tophat_redback_refreshed(time, redshift, thv, loge0, thc, g1, et, s1, logn0, p, logepse, logepsb, g0, xiN, **kwargs)
     KN_model = redback.transient_models.kilonova_models.two_component_kilonova_model(time, redshift, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs)
     combine = AG_model + KN_model
-    return combine #, AG_model, KN_model
+    return combine 
 
-data = pd.read_csv('/Users/harrymccabe/Documents/PHYS498 Masters Project/160821B.csv') #this is a pandas DataFrame
+fig1, ax1 = plt.subplots(1,1)
+ax1.set_xscale('log')
+final.plot_lightcurve(figure = fig1, axes = ax1, random_models = 100, model = model_func, prior = False, show = True, fontsize_legend = 9, legend_location = 'upper right')
+final.plot_multiband_lightcurve(model = model_func, axes = ax1)
+#%%
+# THIS IS FOR THE REFRESHED SHOCK 100 PLOTS
+
+import json
+import numpy as np
+import redback
+import pandas as pd
+import matplotlib.pyplot as plt
+time_arr = np.logspace(-3, 1.3, num = 100)
+freq_arr = np.ones(len(time_arr))*1e14
+redshift = 0.162
+thv = 0.0
+data = pd.read_csv('/Users/harrymccabe/Documents/PHYS498 Masters Project/160821B.csv') #Change as needed to your path
 time_d = data['DeltaT'].values #creates an array of the values in time column
 time_err = data['Time Error'].values
 data_filter = data['Filter'].values
 AB_mag = data['magnitude'].values
 flux_density = data['flux_density'].values #unit is mJy
-flux_density_err = 1e3 * data['Flux Density Error'].values
+flux_density_err = data['Flux Density Error'].values
 frequency = data['Frequency'].values
+# Load the JSON file containing the sampled parameters
+final = redback.result.read_in_result('/Users/harrymccabe/Documents/PHYS498 Masters Project/GRB160821B_result_rTH.json')
+kwargs = dict(frequency=freq_arr, output_format='flux_density')
+pos = final.samples
+col = final.parameter_labels
+df = pd.DataFrame(pos, columns = col)
+print(df)
+def model_func(time, redshift, thv, loge0, thc, g1, et, s1, logn0, p, logepse, logepsb, g0, xiN, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs):
+ 
+    AG_model = redback.transient_models.afterglow_models.tophat_redback_refreshed(time, redshift, thv, loge0, thc, g1, et, s1, logn0, p, logepse, logepsb, g0, xiN, **kwargs)
+    KN_model = redback.transient_models.kilonova_models.two_component_kilonova_model(time, redshift, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs)
+    combine = AG_model + KN_model
+    return combine
 
-thv = 0.0
-redshift = 0.162
+# Step 1: Randomly select 100 rows from the DataFrame
+selected_rows = df.sample(n=100)  # Can fix random_state if needed
 
-kwargs = dict(frequency=frequency, output_format='flux_density')
-data_mode = 'flux_density'
-name = '160821B'
+# Step 2: Extract parameter values from the selected rows
+parameter_sets = selected_rows.to_dict(orient='records')
 
+# Step 3: Compute model output for each parameter set and store in a list
+model_outputs = []
+for params in parameter_sets:
+    params.update(kwargs)
+    output = model_func(time_arr, redshift, thv, **params)
+    model_outputs.append(output)
 
-
-afterglow = redback.transient.Afterglow(name=name, data_mode='flux_density', time=time_d, flux_density=flux_density, flux_density_err=flux_density_err, frequency=frequency)
-
-model_data = model_func(time_d, 0.162, 0.0, 51.3, 0.1, 10, 10, 6, -4, 2.3, -1, -2, 100, 0.1, 0.001, 0.2, 2500, 10, 0.01, 0.1, 2500, 1, **kwargs)
-
-
-plt.loglog(time_d, flux_density, 'o', color='blue', markersize=6, alpha=0.2)
-plt.loglog(time_d, model_data, 's', color='red', markersize=6, alpha=0.2)
-
+# Step 4: Plot the results on the same graph
+plt.figure(figsize=(10, 6))
+for output in model_outputs:
+    plt.loglog(time_arr, output, alpha=0.2, color = 'red')  # Using log-log scale for better 
+plt.errorbar(time_d, flux_density, flux_density_err, color = 'black', label = 'Data', linestyle = '', marker = 'o')
+plt.xlabel('Time In Days [Log Scale]')
+plt.ylabel('Flux In mJy [Log Scale]')
+plt.title('Model Outputs for 100 Random Parameter Sets')
+plt.legend()
 plt.show()
+#%%
 
-nlive = 3000
-sampler = 'dynesty'
+# THIS IS FOR THE TOP HAT SHOCK 100 PLOTS
 
+import json
+import numpy as np
+import redback
+import pandas as pd
+import matplotlib.pyplot as plt
+time_arr = np.logspace(-3, 1.3, num = 100)
+freq_arr = np.ones(len(time_arr))*1e14
+redshift = 0.162
+thv = 0.0
+data = pd.read_csv('/Users/harrymccabe/Documents/PHYS498 Masters Project/160821B.csv') #Change as needed to your path
+time_d = data['DeltaT'].values #creates an array of the values in time column
+time_err = data['Time Error'].values
+data_filter = data['Filter'].values
+AB_mag = data['magnitude'].values
+flux_density = data['flux_density'].values #unit is mJy
+flux_density_err = data['Flux Density Error'].values
+frequency = data['Frequency'].values
+# Load the JSON file containing the sampled parameters
+final = redback.result.read_in_result('/Users/harrymccabe/Documents/PHYS498 Masters Project/GRB160821B_result_TH.json')
+kwargs = dict(frequency=freq_arr, output_format='flux_density')
+pos = final.samples
+col = final.parameter_labels
+df = pd.DataFrame(pos, columns = col)
+print(df)
+def model_func(time, redshift, thv, loge0, thc, logn0, p, logepse, logepsb, g0, xiN, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs):
+    
+    AG_model = redback.transient_models.afterglow_models.tophat_redback(time, redshift, thv, loge0, thc, logn0, p, logepse, logepsb, g0, xiN, **kwargs)
+    KN_model = redback.transient_models.kilonova_models.two_component_kilonova_model(time, redshift, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs)
+    combine = AG_model + KN_model
+    return combine 
 
-priors = bilby.core.prior.PriorDict()   
-priors['thc'] = Uniform(0.02, 0.2, 'thc', latex_label=r'$\thc$')
-priors['loge0'] = Uniform(46, 54, 'loge0', latex_label=r'$\loge0$')
-priors['logn0'] = Uniform(-6, 1, 'logn0', latex_label=r'$\logn0$')
-priors['p'] = Uniform(1.3, 3.3, 'p', latex_label=r'$\p$')
-priors['logepse'] = Uniform(-6, -0.5, 'logepse', latex_label=r'$\logepse$')
-priors['logepsb'] = Uniform(-6, -0.5, 'logepsb', latex_label=r'$\logepsb$')
-priors['g0'] = Uniform(50, 150, 'g0', latex_label=r'$\g0$')
-priors['mej_1'] = Uniform(0.0005, 0.0015, 'mej_1', latex_label=r'$\mej_1$')
-priors['vej_1'] = Uniform(0.1, 0.3, 'vej_1', latex_label=r'$\vej_1$')
-priors['temperature_floor_1'] = LogUniform(1500, 3500, 'temperature_floor_1', latex_label=r'$\temperature_floor_1$')
-priors['kappa_1'] = Uniform(0, 20, 'kappa_1', latex_label=r'$\kappa_1$')
-priors['mej_2'] = Uniform(0.005, 0.015, 'mej_2', latex_label=r'$\mej_2$')
-priors['vej_2'] = Uniform(0.002, 0.2, 'vej_2', latex_label=r'$\vej_2$')
-priors['temperature_floor_2'] = LogUniform(1500, 3500, 'temperature_floor_2', latex_label=r'$\temperature_floor_2$')
-priors['kappa_2'] = Uniform(0, 2, 'kappa_2', latex_label=r'$\kappa_2$')
-priors['xiN'] = Uniform(0.03, 1, 'xiN', latex_label=r'$\xiN$')
-priors['g1'] = Uniform(5, 15, 'g1', latex_label=r'$\g1$')
-priors['et'] = Uniform(2, 40, 'et', latex_label=r'$\et$')
-priors['s1'] = Uniform(1, 10, 's1', latex_label=r'$\s1$')
-priors['redshift'] = 0.162
-priors['thv'] = 0.0
+# Step 1: Randomly select 100 rows from the DataFrame
+selected_rows = df.sample(n=100)  # Can fix random_state if needed
 
-model = model_func
+# Step 2: Extract parameter values from the selected rows
+parameter_sets = selected_rows.to_dict(orient='records')
 
-model_kwargs = kwargs 
+# Step 3: Compute model output for each parameter set and store in a list
+model_outputs = []
+for params in parameter_sets:
+    params.update(kwargs)
+    output = model_func(time_arr, redshift, thv, **params)
+    model_outputs.append(output)
 
-result = redback.fit_model(model=model, sampler=sampler, nlive=nlive, transient=afterglow,
-                           model_kwargs=model_kwargs, prior=priors, sample='rslice', resume=True, clean=True)
-result.plot_lightcurve(random_models=100, model=model_func)
+# Step 4: Plot the results on the same graph
+plt.figure(figsize=(10, 6))
+for output in model_outputs:
+    plt.loglog(time_arr, output, alpha=0.2, color = 'red')  # Using log-log scale for better 
+plt.errorbar(time_d, flux_density, flux_density_err, color = 'black', label = 'Data', linestyle = '', marker = 'o')
+plt.xlabel('Time In Days [Log Scale]')
+plt.ylabel('Flux In mJy [Log Scale]')
+plt.title('Model Outputs for 100 Random Parameter Sets')
+plt.legend()
+plt.show()
+#%%
+
+# Corner plots, can be a slow takes a few mins
+
+import redback
+import pandas as pd
+import numpy as np
+from bilby.core.result import Result
+from bilby.core.result import _determine_file_name # noqa
+import matplotlib.pyplot as plt
+
+def model_func_TH(time, redshift, thv, loge0, thc, logn0, p, logepse, logepsb, g0, xiN, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs):
+    
+    AG_model = redback.transient_models.afterglow_models.tophat_redback(time, redshift, thv, loge0, thc, logn0, p, logepse, logepsb, g0, xiN, **kwargs)
+    KN_model = redback.transient_models.kilonova_models.two_component_kilonova_model(time, redshift, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs)
+    combine = AG_model + KN_model
+    return combine
+
+def model_func_rTH(time, redshift, thv, loge0, thc, g1, et, s1, logn0, p, logepse, logepsb, g0, xiN, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs):
+    
+    AG_model = redback.transient_models.afterglow_models.tophat_redback_refreshed(time, redshift, thv, loge0, thc, g1, et, s1, logn0, p, logepse, logepsb, g0, xiN, **kwargs)
+    KN_model = redback.transient_models.kilonova_models.two_component_kilonova_model(time, redshift, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs)
+    combine = AG_model + KN_model
+    return combine 
+
+result_TH = redback.result.read_in_result("/Users/harrymccabe/Documents/PHYS498 Masters Project/GRB160821B_result_TH.json")
+print('Done TH')
+
+result_rTH = redback.result.read_in_result("/Users/harrymccabe/Documents/PHYS498 Masters Project/GRB160821B_result_rTH.json")
+print('Done rTH')
+
+result_TH.plot_corner(burn = 1000, thin = 100, smooth = True,  show=True, outdir = '/Users/harrymccabe/Documents/PHYS498 Masters Project')
+
+result_rTH.plot_corner(burn = 1000, thin = 100, smooth = True,  show=True, outdir = '/Users/harrymccabe/Documents/PHYS498 Masters Project')
+

@@ -39,7 +39,8 @@ kne = 'at2017gfo'
 data = redback.get_data.get_kilonova_data_from_open_transient_catalog_data(transient=kne)
 print(data)
 time_d = data[('time (days)')].values
-
+flux_err = data[('flux_error')].values
+freq = np.ones(len(time_d))*1e14
 # creates a GRBDir with GRB
 kilonova = redback.kilonova.Kilonova.from_open_access_catalogue(
     name=kne, data_mode="flux_density")
@@ -144,16 +145,19 @@ plt.semilogy(time_arr_z, kilonova_bns_z, label ='z-band 867nm', marker = 'o')
 plt.semilogy(time_arr_y, kilonova_bns_y, label = 'y-band 962nm', marker = 'o')
 plt.semilogy(time_arr_J, kilonova_bns_J, label ='J-band 1.25μm', marker = 'o')
 plt.legend()
+plt.xlim(0.5, 10)
+plt.ylim(0.1, 0.4)
 plt.xlabel('Time (Days)')
 plt.ylabel('Log Flux Density (mJy)')
 plt.title('Binary Neutron Star Merger Kilonova For GW170817')
 plt.show()
 time_arr_two = np.linspace(0.01, 30, 50)
-kwargs = dict(frequency=freq_arr_2, lambda_array = lambda_array, output_format = 'flux_density')
+kwargs = dict(frequency=freq, lambda_array = lambda_array, output_format = 'flux_density')
 frequency = kwargs['frequency']
 lambda_array = lambda_array
-one_component = redback.transient_models.kilonova_models.one_component_kilonova_model(time, redshift, mej_dyn, vej, kappa, **kwargs)
-plt.plot(time_arr_two, (one_component))
+one_component = redback.transient_models.kilonova_models.one_component_kilonova_model(time_d, redshift, mej_dyn, vej, kappa, **kwargs)
+plt.plot(time_d, (one_component), label = 'Model', color = 'black')
+plt.errorbar(time_d, one_component, flux_err, color = 'red', label = 'Data', linestyle = '', marker = 'o')
 plt.xlabel('Time (Days)')
 plt.ylabel('Intensity (mJy)')
 plt.title('One Component Kilonova Model Of GW170817')
@@ -162,30 +166,33 @@ time_arr_three = np.linspace(0.01, 30, 50)
 sampler = 'nessai'
 model = 'two_component_kilonova_model'
 mej_1 = 0.001
-vej_1 = 0.6
-temperature_floor_1 = 4500 # this looks low?
-kappa_1 = 100
+vej_1 = 0.2
+temperature_floor_1 = 2500 # this looks low?
+kappa_1 = 10
 mej_2 = 0.01
-vej_2 = 0.075
-temperature_floor_2 = 3300
-kappa_2 = 10
+vej_2 = 0.1
+temperature_floor_2 = 2500
+kappa_2 = 1
 
 freq_arr_2 = np.ones(len(time_arr_two))*1e14
-freq = 1/(data['time (days)'].values*86400)
+freq2 = 1/(data['time (days)'].values*86400)
 time_arr_3 = (data['time (days)'].values)
 print(freq)
 lambda_array = np.linspace(3000, 30000, 100)
-kwargs = dict(frequency=freq_arr_2, lambda_array = lambda_array, output_format = 'flux_density')
+kwargs = dict(frequency=freq, lambda_array = lambda_array, output_format = 'flux_density')
 frequency = kwargs['frequency']
 lambda_array = lambda_array
-two_component = redback.transient_models.kilonova_models.two_component_kilonova_model(time_arr_three, redshift, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs)
-plt.plot(time_arr_three, (two_component))
+two_component = redback.transient_models.kilonova_models.two_component_kilonova_model(time_d, redshift, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs)
+plt.plot(time_d, (two_component), label = 'Two-Component', color = 'black')
+plt.plot(time_d, (one_component), label = 'One-Component', color = 'grey', linestyle = '-')
+plt.legend()
+#plt.errorbar(time_d, two_component, color = 'red', label = 'Data', linestyle = '', marker = 'o')
 plt.xlabel('Time (Days)')
 plt.ylabel('Intensity (mJy)')
-plt.title('Two Component Kilonova Model Of GW170817')
+plt.title('Two & One Component Kilonova Model Of GW170817')
 plt.show()
 
-plt.plot(time_arr_3, freq)  
+plt.plot(time_arr_3, freq2)  
 plt.xlabel('Time (Days)')
 plt.ylabel('Frequency (Hz)')
 plt.title('GW170817 Frequency Post Merger')
