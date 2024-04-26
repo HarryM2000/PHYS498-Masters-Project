@@ -79,7 +79,7 @@ plt.show()
 
 time_arr = np.logspace(-2.8, 2.8, num = 100)
 time_arr_2 = np.linspace(-10, 10, num = 620)
-time_arr_bns = np.linspace(0, 30, 100)
+time_arr_bns = np.linspace(0, 10, 100)
 freq_arr = np.ones(len(time_arr))*1e14
 freq_arr_2 = np.ones(len(time))*1e14
 lambda_array = np.linspace(3000, 30000, 50)
@@ -188,7 +188,8 @@ plt.plot(time_d, (one_component), label = 'One-Component', color = 'grey', lines
 plt.legend()
 #plt.errorbar(time_d, two_component, color = 'red', label = 'Data', linestyle = '', marker = 'o')
 plt.xlabel('Time (Days)')
-plt.ylabel('Intensity (mJy)')
+plt.ylabel('Log Scale Intensity (mJy)')
+plt.yscale('log')
 plt.title('Two & One Component Kilonova Model Of GW170817')
 plt.show()
 

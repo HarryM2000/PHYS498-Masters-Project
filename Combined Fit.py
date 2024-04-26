@@ -470,7 +470,7 @@ result = redback.fit_model(name = name, model=model, sampler=sampler, nlive=nliv
                            model_kwargs=model_kwargs, prior=priors, nburn = 1000, live_dangerously = True, sample='rslice', resume=True, clean = True, data_mode = 'flux_density')
 result.plot_lightcurve(random_models=100, model=model_func)
 #%%
-# TOP GAT SAMPLING PLOTTER
+# TOP HAT SAMPLING PLOTTER
 final = redback.result.read_in_result('/Users/harrymccabe/Documents/PHYS498 Masters Project/GRB160821B_result_TH.json')
 def model_func(time, redshift, thv, loge0, thc, logn0, p, logepse, logepsb, g0, xiN, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs):
     
@@ -505,8 +505,20 @@ import numpy as np
 import redback
 import pandas as pd
 import matplotlib.pyplot as plt
-time_arr = np.logspace(-3, 1.3, num = 100)
-freq_arr = np.ones(len(time_arr))*1e14
+from matplotlib.lines import Line2D
+time_arr = np.logspace(-2, 1, num = 100)
+freq_arr = np.ones(len(time_arr))*4.86e14
+freq_arr_2 = np.ones(len(time_arr))*2.4e17
+freq_arr_3 = np.ones(len(time_arr))*2.73e14
+freq_arr_4 = np.ones(len(time_arr))*1.88e14
+freq_arr_5 = np.ones(len(time_arr))*4.95e14
+freq_arr_6 = np.ones(len(time_arr))*6.32e14
+freq_arr_7 = np.ones(len(time_arr))*1.88e14
+freq_arr_8 = np.ones(len(time_arr))*1.36e14
+freq_arr_9 = np.ones(len(time_arr))*9.80e9
+freq_arr_10 = np.ones(len(time_arr))*3.46e14
+freq_arr_11 = np.ones(len(time_arr))*3.83e14
+
 redshift = 0.162
 thv = 0.0
 data = pd.read_csv('/Users/harrymccabe/Documents/PHYS498 Masters Project/160821B.csv') #Change as needed to your path
@@ -520,6 +532,16 @@ frequency = data['Frequency'].values
 # Load the JSON file containing the sampled parameters
 final = redback.result.read_in_result('/Users/harrymccabe/Documents/PHYS498 Masters Project/GRB160821B_result_rTH.json')
 kwargs = dict(frequency=freq_arr, output_format='flux_density')
+kwargs2 = dict(frequency=freq_arr_2, output_format='flux_density')
+kwargs3 = dict(frequency=freq_arr_3, output_format='flux_density')
+kwargs4 = dict(frequency=freq_arr_4, output_format='flux_density')
+kwargs5 = dict(frequency=freq_arr_5, output_format='flux_density')
+kwargs6 = dict(frequency=freq_arr_6, output_format='flux_density')
+kwargs7 = dict(frequency=freq_arr_7, output_format='flux_density')
+kwargs8 = dict(frequency=freq_arr_8, output_format='flux_density')
+kwargs9 = dict(frequency=freq_arr_9, output_format='flux_density')
+kwargs10 = dict(frequency=freq_arr_10, output_format='flux_density')
+kwargs11 = dict(frequency=freq_arr_11, output_format='flux_density')
 pos = final.samples
 col = final.parameter_labels
 df = pd.DataFrame(pos, columns = col)
@@ -532,27 +554,114 @@ def model_func(time, redshift, thv, loge0, thc, g1, et, s1, logn0, p, logepse, l
     return combine
 
 # Step 1: Randomly select 100 rows from the DataFrame
-selected_rows = df.sample(n=100)  # Can fix random_state if needed
+selected_rows = df.sample(n=10, random_state = 69)  # Can fix random_state if needed
 
 # Step 2: Extract parameter values from the selected rows
 parameter_sets = selected_rows.to_dict(orient='records')
 
 # Step 3: Compute model output for each parameter set and store in a list
 model_outputs = []
+model_outputs2 = []
+model_outputs3 = []
+model_outputs4 = []
+model_outputs5 = []
+model_outputs6 = []
+model_outputs7 = []
+model_outputs8 = []
+model_outputs9 = []
+model_outputs10 = []
+model_outputs11 = []
+
 for params in parameter_sets:
     params.update(kwargs)
     output = model_func(time_arr, redshift, thv, **params)
     model_outputs.append(output)
-
+for params in parameter_sets:
+    params.update(kwargs2)
+    output2 = model_func(time_arr, redshift, thv, **params)
+    model_outputs2.append(output2)
+for params in parameter_sets:
+    params.update(kwargs3)
+    output3 = model_func(time_arr, redshift, thv, **params)
+    model_outputs3.append(output3)
+for params in parameter_sets:
+    params.update(kwargs4)
+    output4 = model_func(time_arr, redshift, thv, **params)
+    model_outputs4.append(output4)
+for params in parameter_sets:
+    params.update(kwargs5)
+    output5 = model_func(time_arr, redshift, thv, **params)
+    model_outputs5.append(output5)
+for params in parameter_sets:
+    params.update(kwargs6)
+    output6 = model_func(time_arr, redshift, thv, **params)
+    model_outputs6.append(output6)
+for params in parameter_sets:
+    params.update(kwargs7)
+    output7 = model_func(time_arr, redshift, thv, **params)
+    model_outputs7.append(output7)
+for params in parameter_sets:
+    params.update(kwargs8)
+    output8 = model_func(time_arr, redshift, thv, **params)
+    model_outputs8.append(output8)
+for params in parameter_sets:
+    params.update(kwargs9)
+    output9 = model_func(time_arr, redshift, thv, **params)
+    model_outputs9.append(output9)
+for params in parameter_sets:
+    params.update(kwargs10)
+    output10 = model_func(time_arr, redshift, thv, **params)
+    model_outputs2.append(output10)
+for params in parameter_sets:
+    params.update(kwargs11)
+    output11 = model_func(time_arr, redshift, thv, **params)
+    model_outputs11.append(output11)
 # Step 4: Plot the results on the same graph
-plt.figure(figsize=(10, 6))
+custom_handles = [
+    Line2D([0], [0], color='violet', lw=2),
+    Line2D([0], [0], color='grey', lw=2),
+    Line2D([0], [0], color='green', lw=2),
+    Line2D([0], [0], color='orange', lw=2),
+    Line2D([0], [0], color='darkviolet', lw=2),
+    Line2D([0], [0], color='purple', lw=2),
+    Line2D([0], [0], color='yellow', lw=2),
+    Line2D([0], [0], color='red', lw=2),
+    Line2D([0], [0], color='grey', linestyle='--', lw=2),
+    Line2D([0], [0], color='indigo', lw=2),
+    Line2D([0], [0], color='blue', lw=2),
+    Line2D([0], [0], color='black', lw=2, marker = 'o')
+]
+
+plt.figure(figsize=(12, 8))
 for output in model_outputs:
-    plt.loglog(time_arr, output, alpha=0.2, color = 'red')  # Using log-log scale for better 
-plt.errorbar(time_d, flux_density, flux_density_err, color = 'black', label = 'Data', linestyle = '', marker = 'o')
+    plt.loglog(time_arr, output, alpha=0.2, color = 'violet')
+for output2 in model_outputs2:
+    plt.loglog(time_arr, output2, alpha=0.2, color = 'grey')
+for output3 in model_outputs3:
+    plt.loglog(time_arr, output3, alpha=0.2, color = 'green')
+for output4 in model_outputs4:
+    plt.loglog(time_arr, output4, alpha=0.2, color = 'orange')
+for output5 in model_outputs5:
+    plt.loglog(time_arr, output5, alpha=0.2, color = 'darkviolet')
+for output6 in model_outputs6:
+    plt.loglog(time_arr, output6, alpha=0.2, color = 'purple')
+for output7 in model_outputs7:
+    plt.loglog(time_arr, output7, alpha=0.2, color = 'yellow')
+for output8 in model_outputs8:
+    plt.loglog(time_arr, output8, alpha=0.2, color = 'red')
+for output9 in model_outputs9:
+    plt.loglog(time_arr, output9, alpha=0.2, color = 'grey', linestyle = '--')
+for output10 in model_outputs10:
+    plt.loglog(time_arr, output10, alpha=0.2, color = 'indigo')
+for output11 in model_outputs11:
+    plt.loglog(time_arr, output11, alpha=0.2, color = 'blue')
+plt.errorbar(time_d, flux_density, flux_density_err, color = 'black', linestyle = '', marker = 'o')
 plt.xlabel('Time In Days [Log Scale]')
 plt.ylabel('Flux In mJy [Log Scale]')
-plt.title('Model Outputs for 100 Random Parameter Sets')
-plt.legend()
+plt.title('Model Outputs for 100 Random Parameter Sets (Refreshed Top Hat & Two Component Kilonova)')
+plt.ylim(1e-7, 1)# Cut out x-ray lines that are way off
+plt.xlim(0.01, 10)
+plt.legend(handles = custom_handles ,labels = ['r','X-Ray','F110W','F160W','F606W','g','H','K','Radio','z','i', 'Data'], loc = 'lower left', fontsize = 11, ncol = 2)
 plt.show()
 #%%
 
@@ -563,8 +672,20 @@ import numpy as np
 import redback
 import pandas as pd
 import matplotlib.pyplot as plt
-time_arr = np.logspace(-3, 1.3, num = 100)
-freq_arr = np.ones(len(time_arr))*1e14
+from matplotlib.lines import Line2D
+time_arr = np.logspace(-2, 1, num = 100)
+freq_arr = np.ones(len(time_arr))*4.86e14
+freq_arr_2 = np.ones(len(time_arr))*2.4e17
+freq_arr_3 = np.ones(len(time_arr))*2.73e14
+freq_arr_4 = np.ones(len(time_arr))*1.88e14
+freq_arr_5 = np.ones(len(time_arr))*4.95e14
+freq_arr_6 = np.ones(len(time_arr))*6.32e14
+freq_arr_7 = np.ones(len(time_arr))*1.88e14
+freq_arr_8 = np.ones(len(time_arr))*1.36e14
+freq_arr_9 = np.ones(len(time_arr))*9.80e9
+freq_arr_10 = np.ones(len(time_arr))*3.46e14
+freq_arr_11 = np.ones(len(time_arr))*3.83e14
+
 redshift = 0.162
 thv = 0.0
 data = pd.read_csv('/Users/harrymccabe/Documents/PHYS498 Masters Project/160821B.csv') #Change as needed to your path
@@ -578,39 +699,136 @@ frequency = data['Frequency'].values
 # Load the JSON file containing the sampled parameters
 final = redback.result.read_in_result('/Users/harrymccabe/Documents/PHYS498 Masters Project/GRB160821B_result_TH.json')
 kwargs = dict(frequency=freq_arr, output_format='flux_density')
+kwargs2 = dict(frequency=freq_arr_2, output_format='flux_density')
+kwargs3 = dict(frequency=freq_arr_3, output_format='flux_density')
+kwargs4 = dict(frequency=freq_arr_4, output_format='flux_density')
+kwargs5 = dict(frequency=freq_arr_5, output_format='flux_density')
+kwargs6 = dict(frequency=freq_arr_6, output_format='flux_density')
+kwargs7 = dict(frequency=freq_arr_7, output_format='flux_density')
+kwargs8 = dict(frequency=freq_arr_8, output_format='flux_density')
+kwargs9 = dict(frequency=freq_arr_9, output_format='flux_density')
+kwargs10 = dict(frequency=freq_arr_10, output_format='flux_density')
+kwargs11 = dict(frequency=freq_arr_11, output_format='flux_density')
 pos = final.samples
 col = final.parameter_labels
 df = pd.DataFrame(pos, columns = col)
 print(df)
 def model_func(time, redshift, thv, loge0, thc, logn0, p, logepse, logepsb, g0, xiN, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs):
-    
+ 
     AG_model = redback.transient_models.afterglow_models.tophat_redback(time, redshift, thv, loge0, thc, logn0, p, logepse, logepsb, g0, xiN, **kwargs)
     KN_model = redback.transient_models.kilonova_models.two_component_kilonova_model(time, redshift, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs)
     combine = AG_model + KN_model
-    return combine 
+    return combine
 
 # Step 1: Randomly select 100 rows from the DataFrame
-selected_rows = df.sample(n=100)  # Can fix random_state if needed
+selected_rows = df.sample(n=10)  # Can fix random_state if needed
 
 # Step 2: Extract parameter values from the selected rows
 parameter_sets = selected_rows.to_dict(orient='records')
 
 # Step 3: Compute model output for each parameter set and store in a list
 model_outputs = []
+model_outputs2 = []
+model_outputs3 = []
+model_outputs4 = []
+model_outputs5 = []
+model_outputs6 = []
+model_outputs7 = []
+model_outputs8 = []
+model_outputs9 = []
+model_outputs10 = []
+model_outputs11 = []
+
 for params in parameter_sets:
     params.update(kwargs)
     output = model_func(time_arr, redshift, thv, **params)
     model_outputs.append(output)
-
+for params in parameter_sets:
+    params.update(kwargs2)
+    output2 = model_func(time_arr, redshift, thv, **params)
+    model_outputs2.append(output2)
+for params in parameter_sets:
+    params.update(kwargs3)
+    output3 = model_func(time_arr, redshift, thv, **params)
+    model_outputs3.append(output3)
+for params in parameter_sets:
+    params.update(kwargs4)
+    output4 = model_func(time_arr, redshift, thv, **params)
+    model_outputs4.append(output4)
+for params in parameter_sets:
+    params.update(kwargs5)
+    output5 = model_func(time_arr, redshift, thv, **params)
+    model_outputs5.append(output5)
+for params in parameter_sets:
+    params.update(kwargs6)
+    output6 = model_func(time_arr, redshift, thv, **params)
+    model_outputs6.append(output6)
+for params in parameter_sets:
+    params.update(kwargs7)
+    output7 = model_func(time_arr, redshift, thv, **params)
+    model_outputs7.append(output7)
+for params in parameter_sets:
+    params.update(kwargs8)
+    output8 = model_func(time_arr, redshift, thv, **params)
+    model_outputs8.append(output8)
+for params in parameter_sets:
+    params.update(kwargs9)
+    output9 = model_func(time_arr, redshift, thv, **params)
+    model_outputs9.append(output9)
+for params in parameter_sets:
+    params.update(kwargs10)
+    output10 = model_func(time_arr, redshift, thv, **params)
+    model_outputs2.append(output10)
+for params in parameter_sets:
+    params.update(kwargs11)
+    output11 = model_func(time_arr, redshift, thv, **params)
+    model_outputs11.append(output11)
 # Step 4: Plot the results on the same graph
-plt.figure(figsize=(10, 6))
+custom_handles = [
+    Line2D([0], [0], color='violet', lw=2),
+    Line2D([0], [0], color='grey', lw=2),
+    Line2D([0], [0], color='green', lw=2),
+    Line2D([0], [0], color='orange', lw=2),
+    Line2D([0], [0], color='darkviolet', lw=2),
+    Line2D([0], [0], color='purple', lw=2),
+    Line2D([0], [0], color='yellow', lw=2),
+    Line2D([0], [0], color='red', lw=2),
+    Line2D([0], [0], color='grey', linestyle='--', lw=2),
+    Line2D([0], [0], color='indigo', lw=2),
+    Line2D([0], [0], color='blue', lw=2),
+    Line2D([0], [0], color='black', lw=2, marker = 'o')
+]
+
+plt.figure(figsize=(12, 8))
 for output in model_outputs:
-    plt.loglog(time_arr, output, alpha=0.2, color = 'red')  # Using log-log scale for better 
-plt.errorbar(time_d, flux_density, flux_density_err, color = 'black', label = 'Data', linestyle = '', marker = 'o')
+    plt.loglog(time_arr, output, alpha=0.2, color = 'violet')
+for output2 in model_outputs2:
+    plt.loglog(time_arr, output2, alpha=0.2, color = 'grey')
+for output3 in model_outputs3:
+    plt.loglog(time_arr, output3, alpha=0.2, color = 'green')
+for output4 in model_outputs4:
+    plt.loglog(time_arr, output4, alpha=0.2, color = 'orange')
+for output5 in model_outputs5:
+    plt.loglog(time_arr, output5, alpha=0.2, color = 'darkviolet')
+for output6 in model_outputs6:
+    plt.loglog(time_arr, output6, alpha=0.2, color = 'purple')
+for output7 in model_outputs7:
+    plt.loglog(time_arr, output7, alpha=0.2, color = 'yellow')
+for output8 in model_outputs8:
+    plt.loglog(time_arr, output8, alpha=0.2, color = 'red')
+for output9 in model_outputs9:
+    plt.loglog(time_arr, output9, alpha=0.2, color = 'grey', linestyle = '--')
+for output10 in model_outputs10:
+    plt.loglog(time_arr, output10, alpha=0.2, color = 'indigo')
+for output11 in model_outputs11:
+    plt.loglog(time_arr, output11, alpha=0.2, color = 'blue')
+plt.errorbar(time_d, flux_density, flux_density_err, color = 'black', linestyle = '', marker = 'o')
 plt.xlabel('Time In Days [Log Scale]')
 plt.ylabel('Flux In mJy [Log Scale]')
-plt.title('Model Outputs for 100 Random Parameter Sets')
-plt.legend()
+plt.title('Model Outputs for 100 Random Parameter Sets (Top Hat & Two Component Kilonova)')
+plt.ylim(1e-7, 1)# Cut out x-ray lines that are way off
+plt.xlim(0.01, 10)
+plt.legend(handles = custom_handles ,labels = ['r','X-Ray','F110W','F160W','F606W','g','H','K','Radio','z','i', 'Data'], loc = 'lower left', fontsize = 11, ncol = 2)
 plt.show()
 #%%
 

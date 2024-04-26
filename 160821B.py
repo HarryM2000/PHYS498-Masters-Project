@@ -76,7 +76,7 @@ logflux = np.log10(flux_density)
 logfluxerr = abs(np.log10(flux_density_err))
 time_arr = np.logspace(-3, 3, num = 100)
 freq_arr = np.ones(len(time_arr))*1e14
-time_arr_kilo = np.linspace(0.01, 30, 100)
+time_arr_kilo = np.linspace(0.01, 10, 100)
 freq_arr_kilo = np.ones(len(time_arr_kilo))*1e14
 print("time",time_arr)
 fig, axes = plt.subplots(1,1, figsize=(15,12))
@@ -174,7 +174,8 @@ frequency = kwargs['frequency']
 two_component = redback.transient_models.kilonova_models.two_component_kilonova_model(time_arr_kilo, redshift, mej_1, vej_1, temperature_floor_1, kappa_1, mej_2, vej_2, temperature_floor_2, kappa_2, **kwargs)
 plt.plot(time_arr_kilo, (two_component))
 plt.xlabel('Time (Days)')
-plt.ylabel('Intensity (mJy)')
+plt.ylabel('Intensity (mJy) [Log Scale]')
+plt.yscale('log')
 plt.title('Two Component Kilonova Model Of GRB 160821B')
 plt.show()
 
@@ -185,6 +186,7 @@ two_component = redback.transient_models.kilonova_models.two_component_kilonova_
 plt.plot(time_arr_kilo, (two_component), color = 'black', label = 'model')
 plt.errorbar(time_d_kilo, flux_density_kilo, flux_density_err_kilo, logtimeerr, color = 'red', label = 'Data', linestyle = '', marker = 'o')
 plt.xlabel('Time (Days)')
-plt.ylabel('Intensity (mJy)')
+plt.ylabel('Intensity (mJy) [Log Scale]')
+plt.yscale('log')
 plt.title('Two Component Kilonova Model Of GRB 160821B')
 plt.show()
